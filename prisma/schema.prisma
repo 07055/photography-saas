@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String       @id @default(uuid())
+  name          String?
+  email         String       @unique
+  password      String
+  image         String?
+  isAdmin       Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  photos        Photo[]
+  albums        Album[]
+  orders        Order[]
+  subscriptions Subscription?
+  subaccount    Subaccount?
+  payouts       Payout[]
+  ads           Ad[]
+}
+
+model Photo {
+  id          String      @id @default(uuid())
+  title       String
+  description String?
+  originalUrl String
+  thumbUrl    String
+  blurredUrl  String?
+  width       Int?
+  height      Int?
+  fileSize    Int?
+  mimeType    String
+  tags        String?
+  price       Int?        // price in kobo (Paystack smallest unit); null = not for sale
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  albumId     String?
+  album       Album?      @relation(fields: [albumId], references: [id], onDelete: SetNull)
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  reference   String      @unique // Paystack transaction reference
+  email       String               // client email
+  name        String?
+  phone       String?
+  amount      Int                  // total paid in kobo
+  status      String      @default("pending") // pending, success, failed
+  paidAt      DateTime?
+  isReleased  Boolean     @default(false)
+  releaseToken String?    @unique
+  releasedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  albumId     String?
+  album       Album?      @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  price     Int               // price paid for this item in kobo
+  createdAt DateTime @default(now())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  photoId   String
+  photo     Photo    @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, photoId])
+}
+
+model Album {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  coverUrl    String?
+  isPublic    Boolean  @default(false)
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos      Photo[]
+  orders      Order[]
+}
+
+model Subscription {
+  id              String    @id @default(uuid())
+  plan            String    @default("restricted")
+  storageUsed     Int       @default(0)
+  storageLimit    Int       @default(0) // 0 until bank details are set up
+  earningsBalance Int       @default(0) // unpaid earnings in KES cents
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subaccount {
+  id               String   @id @default(uuid())
+  subaccountCode   String?  // Paystack subaccount code (optional now)
+  recipientCode    String?  // Paystack transfer recipient code for auto-payouts
+  accountName      String?
+  accountNumber    String?
+  bankCode         String?
+  bankName         String?
+  mpesaPhone       String?  // M-Pesa number for auto-payouts
+  mpesaName        String?  // Name on M-Pesa account
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Payout {
+  id          String   @id @default(uuid())
+  amount      Int              // amount paid out in KES cents
+  method      String   @default("mpesa") // mpesa, bank_transfer
+  phone       String?          // M-Pesa phone number paid to
+  status      String   @default("completed") // completed, failed
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paidByUserId String?         // admin who processed the payout
+  createdAt   DateTime @default(now())
+}
+
+model Ad {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  price       Int?             // in KES cents, null if not for sale (e.g. service listing)
+  category    String           // photography-services, cameras, lenses, lighting, accessories, studios, other
+  images      String   @default("[]") // JSON array of image URLs
+  contactName String
+  contactPhone String
+  contactEmail String?
+  location    String?
+  status      String   @default("active") // active, sold, hidden
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
