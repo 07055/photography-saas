@@ -17,6 +17,18 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    const existingOrder = await prisma.order.findUnique({
+      where: { reference },
+      select: { id: true, releaseToken: true },
+    });
+
+    if (existingOrder) {
+      return NextResponse.json({
+        orderId: existingOrder.id,
+        releaseToken: existingOrder.releaseToken,
+      });
+    }
+
     const result = await verifyTransaction(reference);
 
     if (!result.status || result.data.status !== "success") {
@@ -24,21 +36,6 @@ export async function GET(req: NextRequest) {
         { error: "Payment not successful" },
         { status: 400 }
       );
-    }
-
-    const existingOrder = await prisma.order.findUnique({
-      where: { reference },
-    });
-
-    if (existingOrder) {
-      const token = existingOrder.releaseToken ?? generateToken();
-      if (!existingOrder.releaseToken) {
-        await prisma.order.update({
-          where: { id: existingOrder.id },
-          data: { releaseToken: token, isReleased: true, releasedAt: new Date() },
-        });
-      }
-      return NextResponse.json({ orderId: existingOrder.id, releaseToken: token });
     }
 
     const metadata = result.data.metadata as {

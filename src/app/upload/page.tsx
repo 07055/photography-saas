@@ -215,7 +215,7 @@ export default function UploadPage() {
               htmlFor="price"
               className="block text-sm font-medium text-gray-700"
             >
-              Client Price (in cents — 100 cents = KSh 1)
+              Client Price (in KES cents — 100 = KSh 1)
             </label>
             <input
               id="price"

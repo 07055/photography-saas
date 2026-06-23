@@ -7,7 +7,7 @@ import Link from "next/link";
 import { PLATFORM_FEE_PERCENT } from "@/lib/constants";
 
 export default function SettingsPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   const [mpesaPhone, setMpesaPhone] = useState("");
@@ -64,6 +64,7 @@ export default function SettingsPage() {
     }
   };
 
+  if (status === "loading") return <div className="min-h-screen flex items-center justify-center"><p className="text-gray-500">Loading...</p></div>;
   if (!session) {
     router.push("/login");
     return null;
@@ -172,10 +173,10 @@ export default function SettingsPage() {
           </h2>
           <ul className="text-sm text-gray-600 space-y-2">
             <li>• A {PLATFORM_FEE_PERCENT}% service fee is added on top of every sale</li>
-            <li>• Client pays: your price + {PLATFORM_FEE_PERCENT}% (e.g. KSh 1000 → client pays KSh 1030)</li>
+            <li>• Client pays: your price + {PLATFORM_FEE_PERCENT}% (e.g. KSh 1000 → client pays KSh {1000 + Math.round(1000 * PLATFORM_FEE_PERCENT / 100)})</li>
             <li>• Your full price is auto-sent to your M-Pesa after each sale</li>
             <li>• The {PLATFORM_FEE_PERCENT}% fee stays with the platform</li>
-            <li>• Minimum KSh 10 payout — no minimum, actually! Every sale pays out immediately</li>
+            <li>• Every sale pays out immediately — no minimum threshold</li>
           </ul>
         </div>
       </main>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initializeTransaction } from "@/lib/paystack";
-import { PLATFORM_FEE_PERCENT } from "@/lib/constants";
+import { PLATFORM_FEE_PERCENT, getBaseUrl, formatPhoneToInternational } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,12 +41,12 @@ export async function POST(req: NextRequest) {
     const fee = Math.round(photosTotal * PLATFORM_FEE_PERCENT / 100);
     const totalAmount = photosTotal + fee;
 
-    const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+    const baseUrl = getBaseUrl();
 
     const result = await initializeTransaction({
       email,
       amount: totalAmount,
-      phone,
+      phone: formatPhoneToInternational(phone ?? ""),
       callbackUrl: `${baseUrl}/payment/success?albumSlug=${albumSlug}`,
       metadata: {
         photoIds,

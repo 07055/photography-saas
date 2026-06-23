@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
 
       const existingOrder = await prisma.order.findUnique({
         where: { reference },
+        select: { id: true },
       });
 
       if (existingOrder) return NextResponse.json({ received: true });

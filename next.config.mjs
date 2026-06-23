@@ -1,4 +1,12 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  images: {
+    remotePatterns: [],
+    unoptimized: true,
+  },
+  experimental: {
+    serverComponentsExternalPackages: ["sharp"],
+  },
+};
 
 export default nextConfig;

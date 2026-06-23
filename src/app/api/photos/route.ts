@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { processImage } from "@/lib/upload";
+import { MAX_UPLOAD_SIZE } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,6 +59,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (file.size > MAX_UPLOAD_SIZE) {
+      return NextResponse.json(
+        { error: "File too large. Maximum size is 20MB." },
+        { status: 400 }
+      );
+    }
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
@@ -68,7 +76,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { originalPath, thumbPath, blurredPath, width, height } = await processImage(
+    const { originalPath, thumbPath, watermarkedPath, width, height } = await processImage(
       buffer,
       file.type
     );
@@ -85,7 +93,7 @@ export async function POST(req: NextRequest) {
         description: description || null,
         originalUrl: originalPath,
         thumbUrl: thumbPath,
-        blurredUrl: blurredPath,
+        blurredUrl: watermarkedPath,
         width,
         height,
         fileSize: buffer.length,

@@ -21,7 +21,6 @@ export async function autoPayout(
       reason: `Payout for order ${orderId}`,
     });
 
-    // Record the payout
     await prisma.payout.create({
       data: {
         amount,
@@ -32,8 +31,6 @@ export async function autoPayout(
       },
     });
   } catch {
-    // Transfer failed — earnings remain as balance
-    // Record failed payout for visibility
     await prisma.payout.create({
       data: {
         amount,

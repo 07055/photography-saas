@@ -16,7 +16,7 @@ const CATEGORIES = [
 ];
 
 export default function CreateAdPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -29,6 +29,7 @@ export default function CreateAdPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  if (status === "loading") return <div className="min-h-screen flex items-center justify-center"><p className="text-gray-500">Loading...</p></div>;
   if (!session) {
     router.push("/login");
     return null;

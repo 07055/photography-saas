@@ -10,11 +10,22 @@ const albumSchema = z.object({
   isPublic: z.boolean().optional(),
 });
 
-function createSlug(name: string): string {
-  return name
+async function createUniqueSlug(name: string, userId: string): Promise<string> {
+  const slug = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+    .replace(/^-|-$/g, "")
+    || "album";
+
+  let suffix = "";
+  let attempts = 0;
+  while (true) {
+    const candidate = slug + suffix;
+    const existing = await prisma.album.findUnique({ where: { slug: candidate } });
+    if (!existing || existing.userId !== userId) return candidate;
+    attempts++;
+    suffix = `-${attempts}`;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -28,7 +39,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { name, description, isPublic } = albumSchema.parse(body);
 
-    const slug = createSlug(name);
+    const slug = await createUniqueSlug(name, session.user.id);
 
     const album = await prisma.album.create({
       data: {

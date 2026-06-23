@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import CopyButton from "@/components/CopyButton";
-import { PLATFORM_FEE_PERCENT, MIN_PAYOUT_KES } from "@/lib/constants";
+import { PLATFORM_FEE_PERCENT, getBaseUrl } from "@/lib/constants";
 
 function formatBytes(bytes: number) {
   if (bytes === 0) return "0 B";
@@ -124,8 +124,7 @@ export default async function DashboardPage() {
                 </p>
                 <p className="text-sm text-red-700 mt-1">
                   Add your bank details in Settings. You earn {PLATFORM_FEE_PERCENT}% less
-                  (service fee) on every sale, and can withdraw once you reach
-                  KSh {MIN_PAYOUT_KES}.
+                  (service fee) on every sale, and payouts are sent automatically.
                 </p>
               </div>
               <Link
@@ -162,9 +161,9 @@ export default async function DashboardPage() {
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {formatKES(earningsBalance)}
             </p>
-            {earningsBalance > 0 && earningsBalance < MIN_PAYOUT_KES * 100 && (
+            {earningsBalance > 0 && (
               <p className="text-xs text-gray-500 mt-1">
-                {formatKES(MIN_PAYOUT_KES * 100 - earningsBalance)} to next payout
+                Auto-paid to your M-Pesa after each sale
               </p>
             )}
           </div>
@@ -239,7 +238,7 @@ export default async function DashboardPage() {
                     >
                       View Gallery
                     </Link>
-                    <CopyButton text={`${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/g/${album.slug}`} />
+                    <CopyButton text={`${getBaseUrl()}/g/${album.slug}`} />
                   </div>
                 </div>
               ))}
@@ -320,7 +319,7 @@ export default async function DashboardPage() {
                     {order.releaseToken && (
                       <div className="mt-2">
                         <CopyButton
-                          text={`${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/d/${order.releaseToken}`}
+                          text={`${getBaseUrl()}/d/${order.releaseToken}`}
                         />
                       </div>
                     )}

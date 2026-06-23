@@ -36,7 +36,7 @@ type Payout = {
 };
 
 export default function AdminPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
@@ -54,6 +54,7 @@ export default function AdminPage() {
       .catch(() => {});
   }, []);
 
+  if (status === "loading") return <div className="min-h-screen flex items-center justify-center"><p className="text-gray-500">Loading...</p></div>;
   if (!session) {
     router.push("/login");
     return null;

@@ -5,6 +5,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import SetPriceButton from "./SetPriceButton";
 import TogglePublicButton from "./TogglePublicButton";
+import { getBaseUrl } from "@/lib/constants";
 
 export default async function ManageAlbumPage({
   params,
@@ -23,7 +24,7 @@ export default async function ManageAlbumPage({
 
   if (!album) notFound();
 
-  const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const baseUrl = getBaseUrl();
 
   return (
     <div className="min-h-screen bg-gray-50">

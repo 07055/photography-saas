@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const order = await prisma.order.findUnique({
-      where: { releaseToken },
+      where: { releaseToken, isReleased: true, status: "success" },
       include: {
         items: {
           include: { photo: true },
@@ -27,36 +27,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    const uploadDir = path.join(process.cwd(), "public");
+    // Delete sold photos from disk and DB to free storage
     let totalFreed = 0;
     const deletedPhotoIds: string[] = [];
 
     for (const item of order.items) {
       const photo = item.photo;
 
-      // Delete files from disk
       const filesToDelete = [photo.originalUrl, photo.thumbUrl, photo.blurredUrl]
         .filter(Boolean)
-        .map((url) => path.join(uploadDir, url!));
+        .map((url) => path.join(process.cwd(), "public", url!));
 
       for (const filePath of filesToDelete) {
-        try {
-          await fs.unlink(filePath);
-        } catch {
-          // File may already be deleted
-        }
+        try { await fs.unlink(filePath); } catch { /* already deleted */ }
       }
 
       if (photo.fileSize) totalFreed += photo.fileSize;
       deletedPhotoIds.push(photo.id);
     }
 
-    // Delete the photo records
     await prisma.photo.deleteMany({
       where: { id: { in: deletedPhotoIds } },
     });
 
-    // Free up storage for the photographer
     if (totalFreed > 0) {
       await prisma.subscription.update({
         where: { userId: order.userId },
@@ -64,10 +57,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Mark order as fulfilled
+    // Mark order as fulfilled (keep releaseToken valid, page shows "done" state client-side)
     await prisma.order.update({
       where: { id: order.id },
-      data: { isReleased: false, releaseToken: null },
+      data: { isReleased: false },
     });
 
     return NextResponse.json({ freed: totalFreed, photosDeleted: deletedPhotoIds.length });
