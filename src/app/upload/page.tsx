@@ -53,7 +53,7 @@ export default function UploadPage() {
         formData.append("title", title || file.name);
         formData.append("description", description);
         formData.append("tags", tags);
-        formData.append("price", price);
+        formData.append("price", price ? String(Math.round(parseFloat(price) * 100)) : "");
         if (albumId) formData.append("albumId", albumId);
 
         const res = await fetch("/api/photos", {
@@ -215,7 +215,7 @@ export default function UploadPage() {
               htmlFor="price"
               className="block text-sm font-medium text-gray-700"
             >
-              Client Price (in KES cents — 100 = KSh 1)
+              Price per photo (KSh)
             </label>
             <input
               id="price"
@@ -223,7 +223,7 @@ export default function UploadPage() {
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               disabled={uploading}
-              placeholder="e.g. 5000 for KSh 50"
+              placeholder="e.g. 50"
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
             <p className="mt-1 text-xs text-gray-500">

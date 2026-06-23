@@ -12,7 +12,7 @@ export default function SetPriceButton({
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
-  const [price, setPrice] = useState(currentPrice ? String(currentPrice) : "");
+  const [price, setPrice] = useState(currentPrice ? String(currentPrice / 100) : "");
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -23,7 +23,7 @@ export default function SetPriceButton({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           photoId,
-          price: price ? parseInt(price, 10) : null,
+          price: price ? Math.round(parseFloat(price) * 100) : null,
         }),
       });
 
@@ -46,7 +46,7 @@ export default function SetPriceButton({
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
-          placeholder="cents"
+          placeholder="KSh"
           autoFocus
         />
         <button
