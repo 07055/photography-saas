@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No subscription found" }, { status: 400 });
     }
 
-    if (subscription.storageLimit == 0) {
+    if (Number(subscription.storageLimit) === 0) {
       return NextResponse.json(
         { error: "Set up your payment details in Settings before uploading photos" },
         { status: 400 }
@@ -120,7 +120,6 @@ export async function POST(req: NextRequest) {
 
         const { originalPath, thumbPath, watermarkedPath, width, height } = await processImage(
           buffer,
-          file.type
         );
 
         await tx.photo.create({

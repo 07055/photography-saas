@@ -1,12 +1,12 @@
+import { v2 as cloudinary } from "cloudinary";
 import sharp from "sharp";
-import { v4 as uuidv4 } from "uuid";
-import path from "path";
-import fs from "fs/promises";
+import { Readable } from "stream";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-const ORIGINAL_DIR = path.join(UPLOAD_DIR, "original");
-const THUMB_DIR = path.join(UPLOAD_DIR, "thumbs");
-const WATERMARK_DIR = path.join(UPLOAD_DIR, "watermarked");
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+});
 
 export async function isValidImage(buffer: Buffer): Promise<boolean> {
   try {
@@ -17,35 +17,8 @@ export async function isValidImage(buffer: Buffer): Promise<boolean> {
   }
 }
 
-export async function ensureUploadDirs() {
-  await fs.mkdir(ORIGINAL_DIR, { recursive: true });
-  await fs.mkdir(THUMB_DIR, { recursive: true });
-  await fs.mkdir(WATERMARK_DIR, { recursive: true });
-}
-
-const WATERMARK_TEXT = "GrapherPeaces";
-
-function createWatermarkSVG(width: number, height: number): string {
-  const fontSize = Math.max(48, Math.floor(width / 8));
-  const gapX = Math.floor(width / 2.5);
-  const gapY = Math.floor(height / 3);
-  const lines: string[] = [];
-  lines.push(`<defs><text id="wm" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="bold" fill="rgba(255,255,255,0.35)" stroke="rgba(0,0,0,0.3)" stroke-width="2">${WATERMARK_TEXT}</text></defs>`);
-  for (let y = -height; y < height * 2; y += gapY) {
-    for (let x = -width; x < width * 2; x += gapX) {
-      lines.push(`<use href="#wm" x="${x}" y="${y}" transform="rotate(-35, ${x + fontSize}, ${y})"/>`);
-    }
-  }
-  const cx = Math.floor(width / 2);
-  const cy = Math.floor(height / 2);
-  const bigSize = Math.floor(fontSize * 2.5);
-  lines.push(`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" transform="rotate(-35, ${cx}, ${cy})" font-family="Arial, sans-serif" font-size="${bigSize}" font-weight="bold" fill="rgba(255,255,255,0.5)" stroke="rgba(0,0,0,0.4)" stroke-width="3">${WATERMARK_TEXT}</text>`);
-  return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${lines.join("")}</svg>`;
-}
-
 export async function processImage(
   buffer: Buffer,
-  mimeType: string
 ): Promise<{
   originalPath: string;
   thumbPath: string;
@@ -53,54 +26,55 @@ export async function processImage(
   width: number;
   height: number;
 }> {
-  await ensureUploadDirs();
-
-  const filename = `${uuidv4()}${getExtension(mimeType)}`;
-  const originalPath = path.join(ORIGINAL_DIR, filename);
-  const thumbPath = path.join(THUMB_DIR, filename);
-  const watermarkedPath = path.join(WATERMARK_DIR, filename);
-
-  const image = sharp(buffer);
-  const metadata = await image.metadata();
+  const metadata = await sharp(buffer).metadata();
   const imgWidth = metadata.width ?? 800;
   const imgHeight = metadata.height ?? 600;
 
-  await image.toFile(originalPath);
+  const result = await new Promise<{ secure_url: string; public_id: string }>((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "grapherpeaces",
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result!);
+      }
+    );
+    const readable = new Readable();
+    readable.push(buffer);
+    readable.push(null);
+    readable.pipe(uploadStream);
+  });
 
-  const thumbBuffer = await sharp(buffer)
-    .resize(400, 400, { fit: "inside", withoutEnlargement: true })
-    .jpeg({ quality: 80 })
-    .toBuffer();
-  await fs.writeFile(thumbPath, thumbBuffer);
+  const publicId = result.public_id;
 
-  const watermarkSVG = createWatermarkSVG(imgWidth, imgHeight);
-  const watermarkedBuffer = await sharp(buffer)
-    .resize(1600, undefined, { fit: "inside", withoutEnlargement: true })
-    .jpeg({ quality: 75 })
-    .composite([{ input: Buffer.from(watermarkSVG), top: 0, left: 0 }])
-    .toBuffer();
-  await fs.writeFile(watermarkedPath, watermarkedBuffer);
+  const thumbUrl = cloudinary.url(publicId, {
+    secure: true,
+    width: 400,
+    height: 400,
+    crop: "fit",
+    quality: "auto:best",
+    format: "jpg",
+  });
+
+  const watermarkedUrl = cloudinary.url(publicId, {
+    secure: true,
+    transformation: [
+      { width: 1600, crop: "fit", quality: "auto:best", format: "jpg" },
+      {
+        overlay: "text:Arial_48:GrapherPeaces",
+        color: "#ffffff55",
+        flags: "layer_apply",
+      },
+    ],
+  });
 
   return {
-    originalPath: `/uploads/original/${filename}`,
-    thumbPath: `/uploads/thumbs/${filename}`,
-    watermarkedPath: `/uploads/watermarked/${filename}`,
+    originalPath: result.secure_url,
+    thumbPath: thumbUrl,
+    watermarkedPath: watermarkedUrl,
     width: imgWidth,
     height: imgHeight,
   };
-}
-
-function getExtension(mimeType: string): string {
-  switch (mimeType) {
-    case "image/jpeg":
-      return ".jpg";
-    case "image/png":
-      return ".png";
-    case "image/webp":
-      return ".webp";
-    case "image/gif":
-      return ".gif";
-    default:
-      return ".jpg";
-  }
 }

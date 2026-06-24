@@ -22,16 +22,6 @@ export default async function GalleryPage({
   const expired = share.expiresAt < new Date();
 
   if (expired) {
-    const fs = await import("fs/promises");
-    const path = await import("path");
-    for (const photo of share.photos) {
-      const filesToDelete = [photo.originalUrl, photo.thumbUrl, photo.blurredUrl]
-        .filter(Boolean)
-        .map((url) => path.join(process.cwd(), "public", url!));
-      for (const filePath of filesToDelete) {
-        try { await fs.unlink(filePath); } catch { /* already deleted */ }
-      }
-    }
     await prisma.photo.deleteMany({ where: { shareId: share.id } });
     await prisma.share.delete({ where: { id: share.id } });
   }
