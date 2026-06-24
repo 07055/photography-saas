@@ -25,19 +25,13 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const [photos, albums, subscription, orders, subaccount, user] = await Promise.all([
-    prisma.photo.findMany({
+  const [shares, orders, subscription, subaccount, user] = await Promise.all([
+    prisma.share.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
-      take: 10,
-    }),
-    prisma.album.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: "desc" },
-      include: { _count: { select: { photos: true, orders: true } } },
-    }),
-    prisma.subscription.findUnique({
-      where: { userId: session.user.id },
+      include: {
+        _count: { select: { photos: true, orders: true } },
+      },
     }),
     prisma.order.findMany({
       where: { userId: session.user.id },
@@ -45,8 +39,11 @@ export default async function DashboardPage() {
       take: 10,
       include: {
         _count: { select: { items: true } },
-        album: { select: { name: true } },
+        share: { select: { title: true } },
       },
+    }),
+    prisma.subscription.findUnique({
+      where: { userId: session.user.id },
     }),
     prisma.subaccount.findUnique({
       where: { userId: session.user.id },
@@ -59,10 +56,14 @@ export default async function DashboardPage() {
 
   const isAdmin = user?.isAdmin ?? false;
 
-  const storageUsed = subscription?.storageUsed ?? 0;
-  const storageLimit = subscription?.storageLimit ?? 0;
+  const storageUsed = Number(subscription?.storageUsed ?? 0);
+  const storageLimit = Number(subscription?.storageLimit ?? 0);
   const storagePercent = storageLimit > 0 ? (storageUsed / storageLimit) * 100 : 0;
   const earningsBalance = subscription?.earningsBalance ?? 0;
+  const baseUrl = getBaseUrl();
+
+  const totalPhotos = shares.reduce((sum, s) => sum + s._count.photos, 0);
+  const activeShares = shares.filter((s) => s.expiresAt > new Date()).length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -73,12 +74,6 @@ export default async function DashboardPage() {
               <h1 className="text-xl font-bold text-gray-900">GrapherPeaces</h1>
             </div>
             <div className="flex items-center gap-4">
-              <Link
-                href="/gallery"
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Gallery
-              </Link>
               <Link
                 href="/marketplace"
                 className="text-sm text-gray-600 hover:text-gray-900"
@@ -108,6 +103,12 @@ export default async function DashboardPage() {
                 </Link>
               )}
               <span className="text-sm text-gray-600">{session.user.email}</span>
+              <Link
+                href="/api/auth/signout"
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Logout
+              </Link>
             </div>
           </div>
         </div>
@@ -120,11 +121,12 @@ export default async function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-red-800">
-                  Connect your bank to get started
+                  Connect your M-Pesa to get started
                 </p>
                 <p className="text-sm text-red-700 mt-1">
-                  Add your bank details in Settings. You earn {PLATFORM_FEE_PERCENT}% less
-                  (service fee) on every sale, and payouts are sent automatically.
+                  Add your M-Pesa details in Settings. A {PLATFORM_FEE_PERCENT}% service fee
+                  is added to every sale (the client pays it), and your full earnings
+                  are auto-sent to your M-Pesa.
                 </p>
               </div>
               <Link
@@ -141,12 +143,12 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-gray-500">Total Photos</h3>
-            <p className="mt-2 text-3xl font-bold text-gray-900">{photos.length}</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{totalPhotos}</p>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-sm font-medium text-gray-500">Albums</h3>
-            <p className="mt-2 text-3xl font-bold text-gray-900">{albums.length}</p>
+            <h3 className="text-sm font-medium text-gray-500">Active Shares</h3>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{activeShares}</p>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow">
@@ -185,60 +187,68 @@ export default async function DashboardPage() {
           </div>
         )}
 
+        {/* Shares */}
         <div className="bg-white rounded-lg shadow mb-8">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-medium text-gray-900">
-              Your Albums & Galleries
+              Your Shares
             </h2>
             {storageLimit > 0 && (
               <Link
-                href="/albums/new"
+                href="/upload"
                 className="text-sm text-blue-600 hover:text-blue-500"
               >
-                + New Album
+                + New Share
               </Link>
             )}
           </div>
 
-          {albums.length === 0 ? (
+          {shares.length === 0 ? (
             <div className="px-6 py-12 text-center">
-              <p className="text-gray-500">No albums yet.</p>
+              <p className="text-gray-500">No shares yet.</p>
               {storageLimit > 0 && (
                 <Link
-                  href="/albums/new"
+                  href="/upload"
                   className="mt-4 inline-block text-blue-600 hover:text-blue-500"
                 >
-                  Create your first album →
+                  Create your first share link →
                 </Link>
               )}
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {albums.map((album) => (
-                <div key={album.id} className="px-6 py-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900">{album.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {album._count.photos} photos · {album._count.orders} orders
+              {shares.map((s) => (
+                <div key={s.id} className="px-6 py-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">{s.title ?? "Untitled"}</p>
+                      <p className="text-sm text-gray-500">
+                        {s._count.photos} photos · {s._count.orders} orders
+                      </p>
+                    <p className="text-xs text-gray-400">
+                      {s.expiresAt > new Date()
+                        ? `Expires ${new Date(s.expiresAt).toLocaleDateString()}`
+                        : "Expired"}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {album.isPublic ? (
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                        Public
-                      </span>
+                    {s.expiresAt > new Date() ? (
+                      <>
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                          Active
+                        </span>
+                        <Link
+                          href={`/g/${s.token}`}
+                          className="text-sm text-blue-600 hover:text-blue-500"
+                        >
+                          View
+                        </Link>
+                        <CopyButton text={`${baseUrl}/g/${s.token}`} />
+                      </>
                     ) : (
                       <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                        Private
+                        Expired
                       </span>
                     )}
-                    <Link
-                      href={`/g/${album.slug}`}
-                      className="text-sm text-blue-600 hover:text-blue-500"
-                    >
-                      View Gallery
-                    </Link>
-                    <CopyButton text={`${getBaseUrl()}/g/${album.slug}`} />
                   </div>
                 </div>
               ))}
@@ -246,88 +256,52 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Recent Photos</h2>
-            </div>
-
-            {photos.length === 0 ? (
-              <div className="px-6 py-12 text-center">
-                <p className="text-gray-500">No photos yet.</p>
-                {storageLimit > 0 && (
-                  <Link
-                    href="/upload"
-                    className="mt-4 inline-block text-blue-600 hover:text-blue-500"
-                  >
-                    Upload your first photo →
-                  </Link>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-6">
-                {photos.map((photo) => (
-                  <div key={photo.id} className="aspect-square relative rounded-lg overflow-hidden bg-gray-100">
-                    <img
-                      src={photo.thumbUrl}
-                      alt={photo.title}
-                      className="object-cover w-full h-full"
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                      <p className="text-white text-sm truncate">{photo.title}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* Recent Orders */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">Recent Orders</h2>
           </div>
 
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-lg font-medium text-gray-900">Recent Orders</h2>
+          {orders.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <p className="text-gray-500">No orders yet.</p>
+              <p className="text-sm text-gray-400 mt-2">
+                Create a share with priced photos and send the link to clients.
+              </p>
             </div>
-
-            {orders.length === 0 ? (
-              <div className="px-6 py-12 text-center">
-                <p className="text-gray-500">No orders yet.</p>
-                <p className="text-sm text-gray-400 mt-2">
-                  Create a public album with priced photos to start selling.
-                </p>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-100">
-                {orders.map((order) => (
-                  <div key={order.id} className="px-6 py-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {order.email}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {order.album?.name} · {order._count.items} photo(s)
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-gray-900">
-                          KSh {(order.amount / 100).toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {orders.map((order) => (
+                <div key={order.id} className="px-6 py-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {order.email}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {order.share?.title ?? "Share"} · {order._count.items} photo(s)
+                      </p>
                     </div>
-                    {order.releaseToken && (
-                      <div className="mt-2">
-                        <CopyButton
-                          text={`${getBaseUrl()}/d/${order.releaseToken}`}
-                        />
-                      </div>
-                    )}
+                    <div className="text-right">
+                      <p className="font-medium text-gray-900">
+                        KSh {(order.amount / 100).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  {order.releaseToken && (
+                    <div className="mt-2">
+                      <CopyButton
+                        text={`${baseUrl}/d/${order.releaseToken}`}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

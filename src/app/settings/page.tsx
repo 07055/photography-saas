@@ -88,6 +88,12 @@ export default function SettingsPage() {
                 Dashboard
               </Link>
               <span className="text-sm text-gray-600">{session.user?.email}</span>
+              <Link
+                href="/api/auth/signout"
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Logout
+              </Link>
             </div>
           </div>
         </div>

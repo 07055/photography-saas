@@ -8,15 +8,15 @@ import Link from "next/link";
 function PaymentContent() {
   const searchParams = useSearchParams();
   const reference = searchParams.get("reference");
-  const albumSlug = searchParams.get("albumSlug");
+  const shareToken = searchParams.get("shareToken");
   const [releaseToken, setReleaseToken] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!reference || !albumSlug) return;
+    if (!reference || !shareToken) return;
 
     fetch(
-      `/api/paystack/verify?reference=${reference}&albumSlug=${albumSlug}`
+      `/api/paystack/verify?reference=${reference}&shareToken=${shareToken}`
     )
       .then((res) => res.json())
       .then((data) => {
@@ -24,7 +24,7 @@ function PaymentContent() {
         else setError(data.error ?? "Verification failed");
       })
       .catch(() => setError("Failed to verify payment"));
-  }, [reference, albumSlug]);
+  }, [reference, shareToken]);
 
   if (error) {
     return (

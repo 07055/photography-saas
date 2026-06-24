@@ -5,11 +5,29 @@ import { PLATFORM_FEE_PERCENT, getBaseUrl, formatPhoneToInternational } from "@/
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, name, phone, photoIds, albumSlug } = await req.json();
+    const { email, name, phone, photoIds, shareToken } = await req.json();
 
-    if (!email || !photoIds || !photoIds.length || !albumSlug) {
+    if (!email || !photoIds || !photoIds.length || !shareToken) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const share = await prisma.share.findUnique({
+      where: { token: shareToken },
+    });
+
+    if (!share) {
+      return NextResponse.json(
+        { error: "Share not found" },
+        { status: 404 }
+      );
+    }
+
+    if (share.expiresAt < new Date()) {
+      return NextResponse.json(
+        { error: "This share link has expired" },
         { status: 400 }
       );
     }
@@ -17,11 +35,8 @@ export async function POST(req: NextRequest) {
     const photos = await prisma.photo.findMany({
       where: {
         id: { in: photoIds },
+        shareId: share.id,
         price: { not: null },
-        album: { slug: albumSlug },
-      },
-      include: {
-        album: { select: { userId: true, name: true } },
       },
     });
 
@@ -37,7 +52,7 @@ export async function POST(req: NextRequest) {
       0
     );
 
-    // Add 3% platform fee on top
+    // Add 1% platform fee on top
     const fee = Math.round(photosTotal * PLATFORM_FEE_PERCENT / 100);
     const totalAmount = photosTotal + fee;
 
@@ -47,12 +62,12 @@ export async function POST(req: NextRequest) {
       email,
       amount: totalAmount,
       phone: formatPhoneToInternational(phone ?? ""),
-      callbackUrl: `${baseUrl}/payment/success?albumSlug=${albumSlug}`,
+      callbackUrl: `${baseUrl}/payment/success?shareToken=${shareToken}`,
       metadata: {
         photoIds,
-        albumSlug,
-        albumName: photos[0].album?.name,
-        albumUserId: photos[0].album?.userId,
+        shareToken,
+        shareTitle: share.title,
+        shareUserId: share.userId,
         clientName: name,
         clientPhone: phone,
         photosTotal,

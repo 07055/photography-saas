@@ -1,14 +1,22 @@
 import { prisma } from "@/lib/prisma";
 import { initiateTransfer } from "@/lib/paystack";
 
+type TxClient = {
+  subaccount: { findUnique: typeof prisma.subaccount.findUnique };
+  payout: { create: typeof prisma.payout.create };
+};
+
 export async function autoPayout(
   photographerId: string,
   amount: number,
-  orderId: string
+  orderId: string,
+  tx?: TxClient
 ) {
   if (amount <= 0) return;
 
-  const subaccount = await prisma.subaccount.findUnique({
+  const db = tx ?? prisma;
+
+  const subaccount = await db.subaccount.findUnique({
     where: { userId: photographerId },
   });
 
@@ -21,7 +29,7 @@ export async function autoPayout(
       reason: `Payout for order ${orderId}`,
     });
 
-    await prisma.payout.create({
+    await db.payout.create({
       data: {
         amount,
         method: "mpesa",
@@ -31,7 +39,7 @@ export async function autoPayout(
       },
     });
   } catch {
-    await prisma.payout.create({
+    await db.payout.create({
       data: {
         amount,
         method: "mpesa",

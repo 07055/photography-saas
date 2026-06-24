@@ -109,15 +109,11 @@ export async function createTransferRecipient({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      type: "mobile_money_kenya",
+      type: "mobile_money",
       name,
-      description: `M-Pesa payout for ${name}`,
+      account_number: phone,
+      bank_code: "MPESA",
       currency: "KES",
-      details: {
-        bank_code: "",
-        account_number: phone,
-        account_name: name,
-      },
     }),
   });
 

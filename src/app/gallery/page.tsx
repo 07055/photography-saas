@@ -14,6 +14,7 @@ export default async function GalleryPage() {
   const photos = await prisma.photo.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
+    take: 100,
   });
 
   return (

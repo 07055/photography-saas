@@ -2,11 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { processImage } from "@/lib/upload";
+import { processImage, isValidImage } from "@/lib/upload";
 import { MAX_UPLOAD_SIZE } from "@/lib/constants";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown";
+    const { allowed, retryAfter } = checkRateLimit(`upload:${ip}`, 30, 60000);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: `Too many requests. Try again in ${retryAfter} seconds.` },
+        { status: 429 }
+      );
+    }
+
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
@@ -24,7 +34,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (subscription.storageLimit === 0) {
+    if (subscription.storageLimit == 0) {
       return NextResponse.json(
         { error: "Set up your payment details in Settings before uploading photos" },
         { status: 400 }
@@ -52,13 +62,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json(
-        { error: "File must be an image" },
-        { status: 400 }
-      );
-    }
-
     if (file.size > MAX_UPLOAD_SIZE) {
       return NextResponse.json(
         { error: "File too large. Maximum size is 20MB." },
@@ -69,7 +72,15 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    if (subscription.storageUsed + buffer.length > subscription.storageLimit) {
+    if (!isValidImage(buffer)) {
+      return NextResponse.json(
+        { error: "File is not a valid image or format is unsupported" },
+        { status: 400 }
+      );
+    }
+
+    // Rough check first using buffer size
+    if (Number(subscription.storageUsed) + buffer.length > Number(subscription.storageLimit)) {
       return NextResponse.json(
         { error: "Storage limit exceeded" },
         { status: 400 }
@@ -85,7 +96,31 @@ export async function POST(req: NextRequest) {
     const description = formData.get("description") as string;
     const tags = formData.get("tags") as string;
     const albumId = formData.get("albumId") as string;
-    const price = formData.get("price") as string;
+    const priceRaw = formData.get("price") as string;
+
+    let price: number | null = null;
+    if (priceRaw) {
+      price = parseInt(priceRaw, 10);
+      if (isNaN(price) || price < 0) {
+        return NextResponse.json(
+          { error: "Invalid price" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (albumId) {
+      const album = await prisma.album.findUnique({
+        where: { id: albumId },
+        select: { userId: true },
+      });
+      if (!album || album.userId !== session.user.id) {
+        return NextResponse.json(
+          { error: "Album not found" },
+          { status: 404 }
+        );
+      }
+    }
 
     const photo = await prisma.photo.create({
       data: {
@@ -99,7 +134,7 @@ export async function POST(req: NextRequest) {
         fileSize: buffer.length,
         mimeType: file.type,
         tags: tags || null,
-        price: price ? parseInt(price, 10) : null,
+        price,
         userId: session.user.id,
         albumId: albumId || null,
       },
@@ -132,6 +167,8 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const albumId = searchParams.get("albumId");
+    const take = Math.min(Math.max(parseInt(searchParams.get("take") ?? "50", 10) || 50, 1), 200);
+    const skip = Math.max(parseInt(searchParams.get("skip") ?? "0", 10) || 0, 0);
 
     const photos = await prisma.photo.findMany({
       where: {
@@ -139,6 +176,8 @@ export async function GET(req: NextRequest) {
         ...(albumId ? { albumId } : {}),
       },
       orderBy: { createdAt: "desc" },
+      take,
+      skip,
     });
 
     return NextResponse.json({ photos });

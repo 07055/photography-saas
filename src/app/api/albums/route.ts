@@ -11,21 +11,25 @@ const albumSchema = z.object({
 });
 
 async function createUniqueSlug(name: string, userId: string): Promise<string> {
-  const slug = name
+  const base = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
     || "album";
 
-  let suffix = "";
+  let slug = base;
   let attempts = 0;
-  while (true) {
-    const candidate = slug + suffix;
-    const existing = await prisma.album.findUnique({ where: { slug: candidate } });
-    if (!existing || existing.userId !== userId) return candidate;
+  while (attempts < 100) {
+    try {
+      const existing = await prisma.album.findUnique({ where: { slug } });
+      if (!existing || existing.userId !== userId) return slug;
+    } catch {
+      // fall through to retry with suffix
+    }
     attempts++;
-    suffix = `-${attempts}`;
+    slug = `${base}-${attempts}`;
   }
+  throw new Error("Could not generate unique slug");
 }
 
 export async function POST(req: NextRequest) {

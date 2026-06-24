@@ -18,11 +18,26 @@ model User {
   updatedAt     DateTime     @updatedAt
   photos        Photo[]
   albums        Album[]
+  shares        Share[]
   orders        Order[]
   subscriptions Subscription?
   subaccount    Subaccount?
   payouts       Payout[]
   ads           Ad[]
+}
+
+model Share {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  title     String?
+  price     Int?              // price per photo in kobo; null = not for sale
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos    Photo[]
+  orders    Order[]
 }
 
 model Photo {
@@ -37,35 +52,39 @@ model Photo {
   fileSize    Int?
   mimeType    String
   tags        String?
-  price       Int?        // price in kobo (Paystack smallest unit); null = not for sale
+  price       Int?        // price in kobo; null = not for sale
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   userId      String
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   albumId     String?
   album       Album?      @relation(fields: [albumId], references: [id], onDelete: SetNull)
+  shareId     String?
+  share       Share?      @relation(fields: [shareId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
 }
 
 model Order {
-  id          String      @id @default(uuid())
-  reference   String      @unique // Paystack transaction reference
-  email       String               // client email
-  name        String?
-  phone       String?
-  amount      Int                  // total paid in kobo
-  status      String      @default("pending") // pending, success, failed
-  paidAt      DateTime?
-  isReleased  Boolean     @default(false)
+  id           String      @id @default(uuid())
+  reference    String      @unique // Paystack transaction reference
+  email        String               // client email
+  name         String?
+  phone        String?
+  amount       Int                  // total paid in kobo
+  status       String      @default("pending") // pending, success, failed
+  paidAt       DateTime?
+  isReleased   Boolean     @default(false)
   releaseToken String?    @unique
-  releasedAt  DateTime?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  albumId     String?
-  album       Album?      @relation(fields: [albumId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items       OrderItem[]
+  releasedAt   DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  shareId      String?
+  share        Share?      @relation(fields: [shareId], references: [id], onDelete: SetNull)
+  albumId      String?
+  album        Album?      @relation(fields: [albumId], references: [id], onDelete: SetNull)
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items        OrderItem[]
 }
 
 model OrderItem {
@@ -98,8 +117,8 @@ model Album {
 model Subscription {
   id              String    @id @default(uuid())
   plan            String    @default("restricted")
-  storageUsed     Int       @default(0)
-  storageLimit    Int       @default(0) // 0 until bank details are set up
+  storageUsed     BigInt    @default(0)
+  storageLimit    BigInt    @default(0) // 0 until bank details are set up
   earningsBalance Int       @default(0) // unpaid earnings in KES cents
   expiresAt       DateTime?
   createdAt       DateTime  @default(now())

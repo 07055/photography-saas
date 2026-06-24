@@ -1,31 +1,18 @@
 "use client";
 
-import { useState, FormEvent, ChangeEvent, useEffect } from "react";
+import { useState, FormEvent, ChangeEvent } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import CopyButton from "@/components/CopyButton";
 
 export default function UploadPage() {
   const { data: session } = useSession();
-  const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [tags, setTags] = useState("");
   const [price, setPrice] = useState("");
-  const [albums, setAlbums] = useState<{ id: string; name: string }[]>([]);
-  const [albumId, setAlbumId] = useState("");
-  useEffect(() => {
-    fetch("/api/albums")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.albums) setAlbums(data.albums);
-      })
-      .catch(() => {});
-  }, []);
-
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [shareLink, setShareLink] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -46,30 +33,28 @@ export default function UploadPage() {
     setProgress(0);
 
     try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("title", title || file.name);
-        formData.append("description", description);
-        formData.append("tags", tags);
-        formData.append("price", price ? String(Math.round(parseFloat(price) * 100)) : "");
-        if (albumId) formData.append("albumId", albumId);
-
-        const res = await fetch("/api/photos", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || "Upload failed");
-        }
-
-        setProgress(((i + 1) / files.length) * 100);
+      const formData = new FormData();
+      for (const file of files) {
+        formData.append("files", file);
+      }
+      formData.append("title", title || "Untitled");
+      if (price) {
+        formData.append("price", String(Math.round(parseFloat(price) * 100)));
       }
 
-      router.push("/dashboard");
+      const res = await fetch("/api/shares", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Upload failed");
+      }
+
+      setShareLink(data.share.link);
+      setProgress(100);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -77,25 +62,85 @@ export default function UploadPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
+  if (shareLink) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <nav className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16 items-center">
               <Link href="/dashboard" className="text-xl font-bold text-gray-900">
                 GrapherPeaces
               </Link>
             </div>
-            <div className="flex items-center gap-4">
+          </div>
+        </nav>
+
+        <main className="max-w-lg mx-auto px-4 py-16 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Upload Complete!</h1>
+          <p className="text-gray-600 mb-6">
+            Share this link with your client. It expires in 7 days.
+          </p>
+
+          <div className="bg-white rounded-lg shadow p-4 mb-6">
+            <p className="text-sm text-gray-500 mb-2 break-all">{shareLink}</p>
+            <CopyButton text={shareLink} />
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              onClick={() => { setShareLink(null); setFiles([]); setProgress(0); }}
+              className="flex-1 py-2 px-4 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
+            >
+              Upload More
+            </button>
+            <Link
+              href="/dashboard"
+              className="flex-1 text-center py-2 px-4 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+            >
+              Dashboard
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            <Link href="/dashboard" className="text-xl font-bold text-gray-900">
+              GrapherPeaces
+            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/dashboard"
+                className="text-sm text-gray-600 hover:text-gray-900"
+              >
+                Dashboard
+              </Link>
               <span className="text-sm text-gray-600">{session?.user?.email}</span>
+              <Link
+                href="/api/auth/signout"
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Logout
+              </Link>
             </div>
           </div>
         </div>
       </nav>
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">Upload Photos</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-8">
+          Upload Photos & Create Share Link
+        </h1>
 
         <form onSubmit={handleUpload} className="bg-white rounded-lg shadow p-6 space-y-6">
           {error && (
@@ -133,11 +178,8 @@ export default function UploadPage() {
           </div>
 
           <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Title
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+              Share Title
             </label>
             <input
               id="title"
@@ -145,76 +187,16 @@ export default function UploadPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               disabled={uploading}
-              placeholder="Optional - defaults to filename"
+              placeholder="e.g. Jane's Wedding Photos"
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+            <p className="mt-1 text-xs text-gray-500">
+              Optional — helps you identify this share later
+            </p>
           </div>
 
           <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Description
-            </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={uploading}
-              rows={3}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="tags"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Tags
-            </label>
-            <input
-              id="tags"
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              disabled={uploading}
-              placeholder="Comma-separated (e.g. nature, landscape, sunset)"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {albums.length > 0 && (
-            <div>
-              <label
-                htmlFor="album"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Album
-              </label>
-              <select
-                id="album"
-                value={albumId}
-                onChange={(e) => setAlbumId(e.target.value)}
-                disabled={uploading}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">No album</option>
-                {albums.map((album) => (
-                  <option key={album.id} value={album.id}>
-                    {album.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div>
-            <label
-              htmlFor="price"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
               Price per photo (KSh)
             </label>
             <input
@@ -227,7 +209,7 @@ export default function UploadPage() {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
             <p className="mt-1 text-xs text-gray-500">
-              Set a price per photo for client proofing galleries. Leave empty if not for sale.
+              All photos in this share have the same price. Leave empty if not for sale.
             </p>
           </div>
 
@@ -240,10 +222,10 @@ export default function UploadPage() {
             </Link>
             <button
               type="submit"
-              disabled={uploading}
+              disabled={uploading || files.length === 0}
               className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {uploading ? "Uploading..." : "Upload"}
+              {uploading ? "Uploading..." : "Upload & Get Share Link"}
             </button>
           </div>
         </form>

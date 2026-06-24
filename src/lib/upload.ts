@@ -8,6 +8,15 @@ const ORIGINAL_DIR = path.join(UPLOAD_DIR, "original");
 const THUMB_DIR = path.join(UPLOAD_DIR, "thumbs");
 const WATERMARK_DIR = path.join(UPLOAD_DIR, "watermarked");
 
+export async function isValidImage(buffer: Buffer): Promise<boolean> {
+  try {
+    const metadata = await sharp(buffer).metadata();
+    return !!metadata.format && ["jpeg", "png", "webp", "gif", "tiff", "avif"].includes(metadata.format);
+  } catch {
+    return false;
+  }
+}
+
 export async function ensureUploadDirs() {
   await fs.mkdir(ORIGINAL_DIR, { recursive: true });
   await fs.mkdir(THUMB_DIR, { recursive: true });

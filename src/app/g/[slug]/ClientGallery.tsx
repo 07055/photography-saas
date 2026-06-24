@@ -13,13 +13,12 @@ type GalleryPhoto = {
 
 export default function ClientGallery({
   photos,
-  albumSlug,
+  shareToken,
 }: {
   photos: GalleryPhoto[];
-  albumSlug: string;
+  shareToken: string;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,7 +37,7 @@ export default function ClientGallery({
   const pollPayment = useCallback(async (ref: string) => {
     const check = async () => {
       const res = await fetch(
-        `/api/paystack/verify?reference=${ref}&albumSlug=${albumSlug}`
+        `/api/paystack/verify?reference=${ref}&shareToken=${shareToken}`
       );
       const data = await res.json();
       if (data.releaseToken) {
@@ -62,7 +61,7 @@ export default function ClientGallery({
 
     setError("Payment confirmation timed out. Check your M-Pesa messages.");
     setLoading(false);
-  }, [albumSlug]);
+  }, [shareToken]);
 
   useEffect(() => {
     if (reference) pollPayment(reference);
@@ -80,10 +79,6 @@ export default function ClientGallery({
       setError("Please select at least one photo");
       return;
     }
-    if (!email) {
-      setError("Please enter your email");
-      return;
-    }
     if (!phone) {
       setError("Please enter your M-Pesa phone number");
       return;
@@ -97,11 +92,11 @@ export default function ClientGallery({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email,
+          email: `customer-${shareToken}-${Date.now()}@photos.app`,
           name,
           phone,
           photoIds: Array.from(selected),
-          albumSlug,
+          shareToken,
         }),
       });
 
@@ -173,56 +168,64 @@ export default function ClientGallery({
           {error}
         </div>
       )}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8">
-        {photos.map((photo) => {
-          const isSelected = selected.has(photo.id);
-          return (
-            <button
-              key={photo.id}
-              onClick={() => togglePhoto(photo.id)}
-              className={`relative aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 transition-all ${
-                isSelected
-                  ? "border-blue-500 ring-2 ring-blue-300"
-                  : "border-transparent hover:border-gray-300"
-              }`}
-            >
-              <img
-                src={photo.blurredUrl ?? ""}
-                alt={photo.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-2 text-left">
-                <p className="text-white text-sm font-medium truncate">
-                  {photo.title}
-                </p>
-                {photo.price && (
-                  <p className="text-white/90 text-xs">
-                    KSh {(photo.price / 100).toLocaleString()}
+
+      {photos.length === 0 ? (
+        <div className="text-center py-16">
+          <p className="text-gray-500">No photos available in this share.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8">
+          {photos.map((photo) => {
+            const isSelected = selected.has(photo.id);
+            return (
+              <button
+                key={photo.id}
+                onClick={() => togglePhoto(photo.id)}
+                onContextMenu={(e) => e.preventDefault()}
+                className={`relative aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 transition-all ${
+                  isSelected
+                    ? "border-blue-500 ring-2 ring-blue-300"
+                    : "border-transparent hover:border-gray-300"
+                }`}
+              >
+                <img
+                  src={photo.blurredUrl ?? ""}
+                  alt={photo.title}
+                  className="w-full h-full object-cover pointer-events-none"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 p-2 text-left pointer-events-none">
+                  <p className="text-white text-sm font-medium truncate">
+                    {photo.title}
                   </p>
-                )}
-              </div>
-              {isSelected && (
-                <div className="absolute top-2 right-2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={3}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
+                  {photo.price && (
+                    <p className="text-white/90 text-xs">
+                      KSh {(photo.price / 100).toLocaleString()}
+                    </p>
+                  )}
                 </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
+                {isSelected && (
+                  <div className="absolute top-2 right-2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {selected.size > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4">
@@ -248,14 +251,6 @@ export default function ClientGallery({
                   className="px-3 py-2 border border-gray-300 rounded text-sm"
                 />
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Your email *"
-                  required
-                  className="px-3 py-2 border border-gray-300 rounded text-sm"
-                />
-                <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -266,7 +261,7 @@ export default function ClientGallery({
               </div>
               <button
                 onClick={handleCheckout}
-                disabled={loading || !email || !phone}
+                disabled={loading || !phone}
                 className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 whitespace-nowrap"
               >
                 {loading ? "Processing..." : "Pay with M-Pesa"}

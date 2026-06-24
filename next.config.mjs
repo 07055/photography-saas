@@ -5,7 +5,8 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
-    serverComponentsExternalPackages: ["sharp"],
+    serverComponentsExternalPackages: ["sharp", "@prisma/client"],
+    webpackBuildWorker: false,
   },
 };
 

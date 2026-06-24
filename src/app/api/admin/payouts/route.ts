@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -18,9 +18,14 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const take = Math.min(Math.max(parseInt(searchParams.get("take") ?? "50", 10) || 50, 1), 200);
+    const skip = Math.max(parseInt(searchParams.get("skip") ?? "0", 10) || 0, 0);
+
     const payouts = await prisma.payout.findMany({
       orderBy: { createdAt: "desc" },
-      take: 50,
+      take,
+      skip,
       include: {
         user: { select: { name: true, email: true } },
       },
