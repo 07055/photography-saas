@@ -32,18 +32,11 @@ export default function RegisterPage() {
         return;
       }
 
-      const result = await signIn("credentials", {
+      await signIn("credentials", {
         email,
         password,
-        redirect: false,
+        callbackUrl: "/dashboard",
       });
-
-      if (result?.error) {
-        setError(result.error);
-      } else {
-        router.push("/dashboard");
-        router.refresh();
-      }
     } catch {
       setError("Something went wrong");
     } finally {

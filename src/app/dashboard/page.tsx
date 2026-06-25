@@ -123,10 +123,10 @@ export default async function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-red-800">
-                  Connect your M-Pesa to get started
+                  Set up M-Pesa Payment Details
                 </p>
                 <p className="text-sm text-red-700 mt-1">
-                  Add your M-Pesa details in Settings. A {PLATFORM_FEE_PERCENT}% service fee
+                  Add your M-Pesa details in Settings to start selling. A {PLATFORM_FEE_PERCENT}% service fee
                   is added to every sale (the client pays it), and your full earnings
                   are auto-sent to your M-Pesa.
                 </p>
