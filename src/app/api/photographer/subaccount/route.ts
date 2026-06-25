@@ -32,18 +32,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create Paystack transfer recipient for auto-payouts
-    const result = await createTransferRecipient({
-      name: mpesaName,
-      phone: mpesaPhone,
-    });
-
-    if (!result.status) {
-      console.error("Paystack createTransferRecipient error:", JSON.stringify(result));
-      return NextResponse.json(
-        { error: result.message ?? "Failed to create payout recipient" },
-        { status: 400 }
-      );
+    // Try to create Paystack transfer recipient for auto-payouts
+    let recipientCode: string | null = null;
+    try {
+      const result = await createTransferRecipient({
+        name: mpesaName,
+        phone: mpesaPhone,
+      });
+      if (result.status) {
+        recipientCode = result.data.recipient_code;
+      } else {
+        console.warn("Paystack createTransferRecipient failed (test mode?):", result.message);
+      }
+    } catch (e) {
+      console.warn("Paystack createTransferRecipient threw (test mode?):", e);
     }
 
     // Upsert subaccount/payout info - store in international format
@@ -51,13 +53,13 @@ export async function POST(req: NextRequest) {
     const subaccount = await prisma.subaccount.upsert({
       where: { userId: session.user.id },
       create: {
-        recipientCode: result.data.recipient_code,
+        recipientCode,
         mpesaPhone: internationalPhone,
         mpesaName,
         userId: session.user.id,
       },
       update: {
-        recipientCode: result.data.recipient_code,
+        recipientCode: recipientCode ?? undefined,
         mpesaPhone: internationalPhone,
         mpesaName,
       },
@@ -70,9 +72,10 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ subaccount });
-  } catch {
+  } catch (error) {
+    console.error("Subaccount save error:", error);
     return NextResponse.json(
-      { error: "Failed to save payout info" },
+      { error: error instanceof Error ? error.message : "Failed to save payout info" },
       { status: 500 }
     );
   }

@@ -29,6 +29,8 @@ export default function SettingsPage() {
             mpesaPhone: d.subaccount.mpesaPhone ?? null,
             mpesaName: d.subaccount.mpesaName ?? null,
           });
+          setMpesaPhone(d.subaccount.mpesaPhone ?? "");
+          setMpesaName(d.subaccount.mpesaName ?? "");
         }
       })
       .catch(() => {});
@@ -53,10 +55,10 @@ export default function SettingsPage() {
         throw new Error(data.error ?? "Failed to save");
       }
 
-      setSuccess("Payout info saved! Earnings will be auto-sent to your M-Pesa.");
+      setSuccess("Payout info saved! Redirecting to dashboard...");
       setExisting({ mpesaPhone, mpesaName });
-      setMpesaPhone("");
-      setMpesaName("");
+
+      setTimeout(() => { window.location.href = "/dashboard"; }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {

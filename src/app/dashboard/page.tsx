@@ -6,6 +6,8 @@ import Link from "next/link";
 import CopyButton from "@/components/CopyButton";
 import { PLATFORM_FEE_PERCENT, getBaseUrl } from "@/lib/constants";
 
+export const dynamic = "force-dynamic";
+
 function formatBytes(bytes: number) {
   if (bytes === 0) return "0 B";
   const k = 1024;

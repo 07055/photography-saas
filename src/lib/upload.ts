@@ -33,7 +33,6 @@ export async function processImage(
   const result = await new Promise<{ secure_url: string; public_id: string }>((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: "grapherpeaces",
         resource_type: "image",
       },
       (error, result) => {

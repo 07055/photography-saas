@@ -98,60 +98,62 @@ export async function POST(req: NextRequest) {
     const token = generateShareToken();
     const expiresAt = new Date(Date.now() + SHARE_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
 
-    const share = await prisma.$transaction(async (tx) => {
-      const s = await tx.share.create({
-        data: {
-          token,
-          title,
+    // Create the share record first (fast DB op)
+    const share = await prisma.share.create({
+      data: { token, title, price, expiresAt, userId: session.user.id },
+    });
+
+    // Read all file buffers first, then upload to Cloudinary in parallel
+    const fileBuffers = await Promise.all(
+      files.map(async (file) => ({
+        file,
+        buffer: Buffer.from(await file.arrayBuffer()),
+      }))
+    );
+
+    const validImages = (
+      await Promise.all(
+        fileBuffers.map(async ({ file, buffer }) => {
+          if (!(await isValidImage(buffer))) return null;
+          return { file, buffer };
+        })
+      )
+    ).filter(Boolean) as { file: File; buffer: Buffer }[];
+
+    // Upload all images to Cloudinary in parallel
+    const photoData = await Promise.all(
+      validImages.map(async ({ file, buffer }) => {
+        const { originalPath, thumbPath, watermarkedPath, width, height } = await processImage(buffer);
+        return {
+          title: file.name,
+          originalUrl: originalPath,
+          thumbUrl: thumbPath,
+          blurredUrl: watermarkedPath,
+          width,
+          height,
+          fileSize: buffer.length,
+          mimeType: file.type,
           price,
-          expiresAt,
           userId: session.user.id,
-        },
-      });
+          shareId: share.id,
+        };
+      })
+    );
 
-      let processedCount = 0;
-      for (const file of files) {
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
+    if (photoData.length === 0) {
+      await prisma.share.delete({ where: { id: share.id } });
+      throw new Error("No valid images found in upload");
+    }
 
-        if (!(await isValidImage(buffer))) {
-          continue;
-        }
-
-        const { originalPath, thumbPath, watermarkedPath, width, height } = await processImage(
-          buffer,
-        );
-
-        await tx.photo.create({
-          data: {
-            title: file.name,
-            originalUrl: originalPath,
-            thumbUrl: thumbPath,
-            blurredUrl: watermarkedPath,
-            width,
-            height,
-            fileSize: buffer.length,
-            mimeType: file.type,
-            price,
-            userId: session.user.id,
-            shareId: s.id,
-          },
-        });
-
-        processedCount++;
-      }
-
-      if (processedCount === 0) {
-        throw new Error("No valid images found in upload");
-      }
-
+    // Quick DB transaction for photos + storage update only
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.photo.createMany({ data: photoData });
       await tx.subscription.update({
         where: { userId: session.user.id },
         data: { storageUsed: { increment: totalBytes } },
       });
-
       return tx.share.findUnique({
-        where: { id: s.id },
+        where: { id: share.id },
         include: { _count: { select: { photos: true } } },
       });
     });
@@ -161,11 +163,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         share: {
-          id: share!.id,
-          token: share!.token,
-          title: share!.title,
-          photoCount: share!._count.photos,
-          link: `${baseUrl}/g/${share!.token}`,
+          id: updated!.id,
+          token: updated!.token,
+          title: updated!.title,
+          photoCount: updated!._count.photos,
+          link: `${baseUrl}/g/${updated!.token}`,
         },
       },
       { status: 201 }
