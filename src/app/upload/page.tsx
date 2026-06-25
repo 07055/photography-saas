@@ -87,7 +87,7 @@ export default function UploadPage() {
           </p>
 
           <div className="bg-white rounded-lg shadow p-4 mb-6">
-            <p className="text-sm text-gray-500 mb-2 break-all">{shareLink}</p>
+            <a href={shareLink} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:text-blue-800 underline break-all mb-2 block">{shareLink}</a>
             <CopyButton text={shareLink} />
           </div>
 
