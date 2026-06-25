@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    console.error("Register error:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }
