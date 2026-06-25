@@ -59,14 +59,21 @@ export async function processImage(
 
   const watermarkedUrl = cloudinary.url(publicId, {
     secure: true,
-    transformation: [
-      { width: 1600, crop: "fit", quality: "auto:best", format: "jpg" },
-      {
-        overlay: "text:Arial_48:GrapherPeaces",
-        color: "#ffffff55",
-        flags: "layer_apply",
-      },
-    ],
+    width: 1600,
+    crop: "fit",
+    quality: "auto:best",
+    format: "jpg",
+    overlay: {
+      font_family: "Arial",
+      font_size: 48,
+      text: "GrapherPeaces",
+      font_color: "white",
+      font_weight: "bold",
+    },
+    opacity: 35,
+    gravity: "south_east",
+    x: 20,
+    y: 20,
   });
 
   return {

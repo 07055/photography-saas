@@ -35,7 +35,11 @@ export async function initializeTransaction({
     email,
     amount,
     currency: "KES",
-    channels: phone ? ["mpesa"] : ["card", "bank_transfer", "mobile_money"],
+    channels: phone
+      ? PAYSTACK_SECRET_KEY.startsWith("sk_test_")
+        ? ["card", "mobile_money"]
+        : ["mpesa", "card", "bank_transfer", "mobile_money"]
+      : ["card", "bank_transfer", "mobile_money"],
     callback_url: callbackUrl,
     metadata,
   };
