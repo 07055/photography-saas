@@ -112,9 +112,9 @@ export async function GET(req: NextRequest) {
         const o = await tx.order.create({
           data: {
             reference,
-            email: result.data.email,
+            email: result.data.email ?? "customer@unknown.com",
             name: metadata.clientName ?? null,
-            amount: result.data.amount,
+            amount: result.data.amount ?? 0,
             status: "success",
             paidAt: new Date(result.data.paid_at ?? new Date().toISOString()),
             isReleased: true,
@@ -132,15 +132,20 @@ export async function GET(req: NextRequest) {
         });
 
         if (metadata.photosTotal && share.userId) {
-          await autoPayout(share.userId, metadata.photosTotal, o.id, tx);
+          try {
+            await autoPayout(share.userId, metadata.photosTotal, o.id, tx);
+          } catch (payoutErr) {
+            console.error("Payout failed (non-fatal):", payoutErr);
+          }
         }
 
         return { id: o.id, releaseToken };
       });
     } catch (e) {
       console.error("Transaction failed:", e);
+      const msg = e instanceof Error ? e.message : "Unknown error";
       return NextResponse.json(
-        { error: "Failed to verify payment" },
+        { error: "Failed to verify payment", detail: msg },
         { status: 500 }
       );
     }
