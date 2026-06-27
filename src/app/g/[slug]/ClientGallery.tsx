@@ -45,7 +45,7 @@ export default function ClientGallery({
         setLoading(false);
         return true;
       }
-      if (data.error && !data.error.includes("not successful")) {
+      if (data.error && !data.error.includes("not yet successful")) {
         setError(data.error);
         setLoading(false);
         return true;
@@ -174,7 +174,7 @@ export default function ClientGallery({
           <p className="text-gray-500">No photos available in this share.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8 select-none" style={{ WebkitTouchCallout: "none" } as React.CSSProperties}>
           {photos.map((photo) => {
             const isSelected = selected.has(photo.id);
             return (
@@ -191,7 +191,9 @@ export default function ClientGallery({
                 <img
                   src={photo.blurredUrl ?? ""}
                   alt={photo.title}
-                  className="w-full h-full object-cover pointer-events-none"
+                  draggable={false}
+                  className="w-full h-full object-cover pointer-events-none select-none"
+                  style={{ WebkitUserDrag: "none" } as React.CSSProperties}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 p-2 text-left pointer-events-none">

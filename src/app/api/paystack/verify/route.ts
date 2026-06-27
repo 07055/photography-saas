@@ -17,37 +17,48 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    const existingOrder = await prisma.order.findUnique({
+      where: { reference },
+      select: { id: true, releaseToken: true },
+    });
+
+    if (existingOrder) {
+      return NextResponse.json({ orderId: existingOrder.id, releaseToken: existingOrder.releaseToken });
+    }
+
+    const result = await verifyTransaction(reference);
+
+    if (!result.status) {
+      return NextResponse.json(
+        { error: "Payment verification failed with Paystack" },
+        { status: 200 }
+      );
+    }
+
+    if (result.data.status !== "success") {
+      return NextResponse.json(
+        { error: "Payment not yet successful", status: result.data.status },
+        { status: 200 }
+      );
+    }
+
+    const metadataRaw = result.data.metadata;
+    const metadata = (typeof metadataRaw === "string" ? JSON.parse(metadataRaw) : metadataRaw) as {
+      photoIds: string[];
+      shareToken: string;
+      shareUserId: string;
+      clientName?: string;
+      photosTotal?: number;
+      platformFee?: number;
+    };
+
     const order = await prisma.$transaction(async (tx) => {
-      const existingOrder = await tx.order.findUnique({
-        where: { reference },
-        select: { id: true, releaseToken: true },
-      });
-
-      if (existingOrder) {
-        return existingOrder;
-      }
-
-      const result = await verifyTransaction(reference);
-
-      if (!result.status || result.data.status !== "success") {
-        throw new Error("Payment not successful");
-      }
-
-      const metadata = result.data.metadata as {
-        photoIds: string[];
-        shareToken: string;
-        shareUserId: string;
-        clientName?: string;
-        photosTotal?: number;
-        platformFee?: number;
-      };
-
       const photos = await tx.photo.findMany({
         where: { id: { in: metadata.photoIds } },
       });
 
       const share = await tx.share.findUnique({
-        where: { token: shareToken },
+        where: { token: metadata.shareToken },
       });
 
       if (!share) {
@@ -86,7 +97,8 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ orderId: order.id, releaseToken: order.releaseToken });
-  } catch {
+  } catch (error) {
+    console.error("Verify payment error:", error);
     return NextResponse.json(
       { error: "Failed to verify payment" },
       { status: 500 }

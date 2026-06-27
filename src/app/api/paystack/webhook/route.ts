@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
       const result = await verifyTransaction(reference);
 
       if (result.status && result.data.status === "success") {
-        const metadata = result.data.metadata as {
+        const metadataRaw = result.data.metadata;
+        const metadata = (typeof metadataRaw === "string" ? JSON.parse(metadataRaw) : metadataRaw) as {
           photoIds: string[];
           shareToken: string;
           shareUserId: string;
