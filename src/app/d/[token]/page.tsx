@@ -44,6 +44,7 @@ export default async function TokenDownloadPage({
             mimeType: item.photo.mimeType,
           }))}
           releaseToken={params.token}
+          orderId={order.id}
         />
       </main>
     </div>

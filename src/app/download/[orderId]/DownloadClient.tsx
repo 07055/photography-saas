@@ -8,17 +8,39 @@ type PurchasedPhoto = {
   mimeType: string;
 };
 
+const EXT_MAP: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/bmp": "bmp",
+  "image/tiff": "tiff",
+  "image/svg+xml": "svg",
+  "image/heic": "heic",
+  "image/heif": "heif",
+  "image/avif": "avif",
+};
+
+function extFromMime(mime: string): string {
+  return EXT_MAP[mime] || "jpg";
+}
+
 export default function DownloadClient({
   photos,
+  releaseToken,
 }: {
   photos: PurchasedPhoto[];
+  releaseToken: string;
 }) {
+  const downloadUrl = (photoId: string) =>
+    `/api/download?photoId=${photoId}&token=${releaseToken}`;
+
   const downloadAll = () => {
     photos.forEach((photo, i) => {
       setTimeout(() => {
         const a = document.createElement("a");
-        a.href = photo.originalUrl;
-        a.download = photo.title;
+        a.href = downloadUrl(photo.id);
+        a.download = `${photo.title}.${extFromMime(photo.mimeType)}`;
         a.click();
       }, i * 500);
     });
@@ -26,8 +48,8 @@ export default function DownloadClient({
 
   const downloadOne = (photo: PurchasedPhoto) => {
     const a = document.createElement("a");
-    a.href = photo.originalUrl;
-    a.download = photo.title;
+    a.href = downloadUrl(photo.id);
+    a.download = `${photo.title}.${extFromMime(photo.mimeType)}`;
     a.click();
   };
 

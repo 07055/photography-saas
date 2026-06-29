@@ -34,8 +34,9 @@ export default function ClientGallery({
   const fee = Math.round(photosTotal * PLATFORM_FEE_PERCENT / 100);
   const total = photosTotal + fee;
 
-  const pollPayment = useCallback(async (ref: string) => {
+  const pollPayment = useCallback(async (ref: string, signal: AbortSignal) => {
     const check = async () => {
+      if (signal.aborted) return true;
       const res = await fetch(
         `/api/paystack/verify?reference=${ref}&shareToken=${shareToken}`
       );
@@ -54,6 +55,7 @@ export default function ClientGallery({
     };
 
     for (let i = 0; i < 40; i++) {
+      if (signal.aborted) return;
       const done = await check();
       if (done) return;
       await new Promise((r) => setTimeout(r, 3000));
@@ -64,7 +66,10 @@ export default function ClientGallery({
   }, [shareToken]);
 
   useEffect(() => {
-    if (reference) pollPayment(reference);
+    if (!reference) return;
+    const controller = new AbortController();
+    pollPayment(reference, controller.signal);
+    return () => controller.abort();
   }, [reference, pollPayment]);
 
   const togglePhoto = (id: string) => {
@@ -92,7 +97,7 @@ export default function ClientGallery({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: `customer-${shareToken}-${Date.now()}@photos.app`,
+          email: `customer-${shareToken}@photos.app`,
           name,
           phone,
           photoIds: Array.from(selected),

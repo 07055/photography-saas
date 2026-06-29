@@ -10,22 +10,44 @@ type PurchasedPhoto = {
   mimeType: string;
 };
 
+const EXT_MAP: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/bmp": "bmp",
+  "image/tiff": "tiff",
+  "image/svg+xml": "svg",
+  "image/heic": "heic",
+  "image/heif": "heif",
+  "image/avif": "avif",
+};
+
+function extFromMime(mime: string): string {
+  return EXT_MAP[mime] || "jpg";
+}
+
 export default function DownloadClient({
   photos,
   releaseToken,
 }: {
   photos: PurchasedPhoto[];
   releaseToken: string;
+  orderId?: string;
 }) {
   const [done, setDone] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [error, setError] = useState("");
+
+  const downloadUrl = (photoId: string) =>
+    `/api/download?photoId=${photoId}&token=${releaseToken}`;
 
   const downloadAll = () => {
     photos.forEach((photo, i) => {
       setTimeout(() => {
         const a = document.createElement("a");
-        a.href = photo.originalUrl;
-        a.download = photo.title;
+        a.href = downloadUrl(photo.id);
+        a.download = `${photo.title}.${extFromMime(photo.mimeType)}`;
         a.click();
       }, i * 500);
     });
@@ -33,13 +55,14 @@ export default function DownloadClient({
 
   const downloadOne = (photo: PurchasedPhoto) => {
     const a = document.createElement("a");
-    a.href = photo.originalUrl;
-    a.download = photo.title;
+    a.href = downloadUrl(photo.id);
+    a.download = `${photo.title}.${extFromMime(photo.mimeType)}`;
     a.click();
   };
 
   const handleDone = async () => {
     setCompleting(true);
+    setError("");
     try {
       const res = await fetch("/api/orders/done", {
         method: "POST",
@@ -47,8 +70,12 @@ export default function DownloadClient({
         body: JSON.stringify({ releaseToken }),
       });
       if (res.ok) setDone(true);
+      else {
+        const data = await res.json();
+        setError(data.error || "Failed to mark as done");
+      }
     } catch {
-      // Silently fail — files stay
+      setError("Network error — please try again");
     } finally {
       setCompleting(false);
     }
@@ -123,6 +150,9 @@ export default function DownloadClient({
         >
           {completing ? "Cleaning up..." : "Done — Free Up Storage"}
         </button>
+        {error && (
+          <p className="text-red-600 text-sm mt-2">{error}</p>
+        )}
       </div>
     </div>
   );

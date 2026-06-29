@@ -52,6 +52,7 @@ export default async function DownloadPage({
             thumbUrl: item.photo.thumbUrl,
             mimeType: item.photo.mimeType,
           }))}
+          releaseToken={order.releaseToken ?? ""}
         />
       </main>
     </div>

@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
             const o = await tx.order.create({
               data: {
                 reference,
-                email: result.data.email,
+                email: result.data.email ?? "customer@unknown.com",
                 name: metadata.clientName ?? null,
                 amount: result.data.amount,
                 status: "success",
