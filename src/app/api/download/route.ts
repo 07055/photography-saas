@@ -60,6 +60,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof Error && (error as Error & { digest: string }).digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Download error:", error);
     return new NextResponse("Internal error", { status: 500 });
   }

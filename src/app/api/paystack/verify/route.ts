@@ -152,6 +152,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ orderId: order.id, releaseToken: order.releaseToken });
   } catch (error) {
+    if (error instanceof Error && (error as Error & { digest: string }).digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Unexpected verify error:", error);
     return NextResponse.json(
       { error: "Failed to verify payment" },
