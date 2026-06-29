@@ -55,8 +55,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create payout record and deduct balance
-    await Promise.all([
+    await prisma.$transaction([
       prisma.payout.create({
         data: {
           amount,

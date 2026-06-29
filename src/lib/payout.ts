@@ -3,7 +3,7 @@ import { initiateTransfer } from "@/lib/paystack";
 
 type TxClient = {
   subaccount: { findUnique: typeof prisma.subaccount.findUnique };
-  payout: { create: typeof prisma.payout.create };
+  payout: { create: typeof prisma.payout.create; update: typeof prisma.payout.update };
 };
 
 export async function autoPayout(
@@ -22,6 +22,16 @@ export async function autoPayout(
 
   if (!subaccount?.recipientCode || !subaccount.mpesaPhone) return;
 
+  const payout = await db.payout.create({
+    data: {
+      amount,
+      method: "mpesa",
+      phone: subaccount.mpesaPhone ?? "",
+      status: "pending",
+      userId: photographerId,
+    },
+  });
+
   try {
     const result = await initiateTransfer({
       amount,
@@ -29,24 +39,14 @@ export async function autoPayout(
       reason: `Payout for order ${orderId}`,
     });
 
-    await db.payout.create({
-      data: {
-        amount,
-        method: "mpesa",
-        phone: subaccount.mpesaPhone,
-        status: result.status ? "completed" : "failed",
-        userId: photographerId,
-      },
+    await db.payout.update({
+      where: { id: payout.id },
+      data: { status: result.status ? "completed" : "failed" },
     });
   } catch {
-    await db.payout.create({
-      data: {
-        amount,
-        method: "mpesa",
-        phone: subaccount.mpesaPhone ?? "",
-        status: "failed",
-        userId: photographerId,
-      },
+    await db.payout.update({
+      where: { id: payout.id },
+      data: { status: "failed" },
     });
   }
 }

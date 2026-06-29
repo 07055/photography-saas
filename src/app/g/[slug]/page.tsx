@@ -21,11 +21,6 @@ export default async function GalleryPage({
 
   const expired = share.expiresAt < new Date();
 
-  if (expired) {
-    await prisma.photo.deleteMany({ where: { shareId: share.id } });
-    await prisma.share.delete({ where: { id: share.id } });
-  }
-
   if (expired || share.photos.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
