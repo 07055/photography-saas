@@ -247,7 +247,7 @@ export default function ClientGallery({
                 {selected.size} photo(s) selected
               </p>
               <p className="text-sm text-gray-500">
-                KSh {(photosTotal / 100).toLocaleString()} + KSh {(fee / 100).toLocaleString()} service fee
+                KSh {(photosTotal / 100).toLocaleString()} + KSh {(fee / 100).toLocaleString()} ({PLATFORM_FEE_PERCENT}% service fee)
               </p>
               <p className="text-lg font-bold text-gray-900">
                 Total: KSh {(total / 100).toLocaleString()}

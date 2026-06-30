@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       0
     );
 
-    // 0.75% client surcharge, 0.75% photographer deduction = 1.5% total (covers Paystack fees)
+    // Client pays 2% surcharge, photographer deducts 0.5% — platform nets ~1% after Paystack fees
     const clientSurcharge = Math.round(photosTotal * PLATFORM_FEE_PERCENT / 100);
     const photographerDeduction = Math.round(photosTotal * PHOTOGRAPHER_FEE_PERCENT / 100);
     const totalAmount = photosTotal + clientSurcharge;
