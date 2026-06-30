@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { processImage, isValidImage } from "@/lib/upload";
-import { MAX_UPLOAD_SIZE, generateShareToken, getBaseUrl } from "@/lib/constants";
+import { buildPhotoUrls } from "@/lib/upload";
+import { generateShareToken, getBaseUrl } from "@/lib/constants";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 const SHARE_EXPIRY_DAYS = 7;
@@ -50,10 +50,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const formData = await req.formData();
-    const files = formData.getAll("files") as File[];
-    const title = (formData.get("title") as string) || "Untitled";
-    const priceRaw = formData.get("price") as string;
+    const { title, price: priceRaw, photos: photoMetas } = await req.json();
 
     let price: number | null = null;
     if (priceRaw) {
@@ -63,28 +60,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (!files || files.length === 0) {
-      return NextResponse.json({ error: "No files provided" }, { status: 400 });
+    if (!photoMetas || photoMetas.length === 0) {
+      return NextResponse.json({ error: "No photos provided" }, { status: 400 });
     }
 
-    if (files.length > 50) {
+    if (photoMetas.length > 50) {
       return NextResponse.json(
-        { error: "Maximum 50 files per share" },
+        { error: "Maximum 50 photos per share" },
         { status: 400 }
       );
     }
 
-    // Check total file size against remaining storage
-    let totalBytes = 0;
-    for (const file of files) {
-      if (file.size > MAX_UPLOAD_SIZE) {
-        return NextResponse.json(
-          { error: `File too large. Maximum size is 20MB.` },
-          { status: 400 }
-        );
-      }
-      totalBytes += file.size;
-    }
+    const totalBytes = photoMetas.reduce((sum: number, p: { fileSize: number }) => sum + p.fileSize, 0);
 
     const storageUsed = Number(subscription.storageUsed);
     const storageLimit = Number(subscription.storageLimit);
@@ -98,54 +85,29 @@ export async function POST(req: NextRequest) {
     const token = generateShareToken();
     const expiresAt = new Date(Date.now() + SHARE_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
 
-    // Create the share record first (fast DB op)
+    // Create the share record
     const share = await prisma.share.create({
-      data: { token, title, price, expiresAt, userId: session.user.id },
+      data: { token, title: title || "Untitled", price, expiresAt, userId: session.user.id },
     });
 
-    // Read all file buffers first, then upload to Cloudinary in parallel
-    const fileBuffers = await Promise.all(
-      files.map(async (file) => ({
-        file,
-        buffer: Buffer.from(await file.arrayBuffer()),
-      }))
-    );
+    // Build photo records from Cloudinary metadata
+    const photoData = photoMetas.map((meta: { publicId: string; width: number; height: number; fileSize: number; mimeType: string; title?: string }) => {
+      const urls = buildPhotoUrls(meta.publicId);
+      return {
+        title: meta.title || meta.publicId,
+        originalUrl: urls.originalUrl,
+        thumbUrl: urls.thumbUrl,
+        blurredUrl: urls.watermarkedUrl,
+        width: meta.width,
+        height: meta.height,
+        fileSize: meta.fileSize,
+        mimeType: meta.mimeType,
+        price,
+        userId: session.user.id,
+        shareId: share.id,
+      };
+    });
 
-    const validImages = (
-      await Promise.all(
-        fileBuffers.map(async ({ file, buffer }) => {
-          if (!(await isValidImage(buffer))) return null;
-          return { file, buffer };
-        })
-      )
-    ).filter(Boolean) as { file: File; buffer: Buffer }[];
-
-    // Upload all images to Cloudinary in parallel
-    const photoData = await Promise.all(
-      validImages.map(async ({ file, buffer }) => {
-        const { originalPath, thumbPath, watermarkedPath, width, height } = await processImage(buffer);
-        return {
-          title: file.name,
-          originalUrl: originalPath,
-          thumbUrl: thumbPath,
-          blurredUrl: watermarkedPath,
-          width,
-          height,
-          fileSize: buffer.length,
-          mimeType: file.type,
-          price,
-          userId: session.user.id,
-          shareId: share.id,
-        };
-      })
-    );
-
-    if (photoData.length === 0) {
-      await prisma.share.delete({ where: { id: share.id } });
-      throw new Error("No valid images found in upload");
-    }
-
-    // Quick DB transaction for photos + storage update only
     const updated = await prisma.$transaction(async (tx) => {
       await tx.photo.createMany({ data: photoData });
       await tx.subscription.update({

@@ -5,20 +5,68 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import CopyButton from "@/components/CopyButton";
 
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
+const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!;
+const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+
+const FORMAT_MIME: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  gif: "image/gif",
+  tiff: "image/tiff",
+  avif: "image/avif",
+};
+
 export default function UploadPage() {
   const { data: session } = useSession();
   const [files, setFiles] = useState<File[]>([]);
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [shareLink, setShareLink] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFiles(Array.from(e.target.files));
     }
+  };
+
+  const uploadFileToCloudinary = async (file: File): Promise<{
+    publicId: string;
+    width: number;
+    height: number;
+    fileSize: number;
+    mimeType: string;
+    title: string;
+  }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    const res = await fetch(CLOUDINARY_URL, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || "Cloudinary upload failed");
+    }
+
+    const data = await res.json();
+
+    return {
+      publicId: data.public_id,
+      width: data.width,
+      height: data.height,
+      fileSize: data.bytes,
+      mimeType: FORMAT_MIME[data.format as string] || "image/jpeg",
+      title: data.original_filename,
+    };
   };
 
   const handleUpload = async (e: FormEvent) => {
@@ -33,28 +81,42 @@ export default function UploadPage() {
     setProgress(0);
 
     try {
-      const formData = new FormData();
-      for (const file of files) {
-        formData.append("files", file);
+      const totalFiles = files.length;
+      const photoMetas: {
+        publicId: string;
+        width: number;
+        height: number;
+        fileSize: number;
+        mimeType: string;
+        title: string;
+      }[] = [];
+
+      for (let i = 0; i < totalFiles; i++) {
+        const meta = await uploadFileToCloudinary(files[i]);
+        photoMetas.push(meta);
+        setProgress(Math.round(((i + 1) / totalFiles) * 80));
       }
-      formData.append("title", title || "Untitled");
-      if (price) {
-        formData.append("price", String(Math.round(parseFloat(price) * 100)));
-      }
+
+      setProgress(85);
 
       const res = await fetch("/api/shares", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title || "Untitled",
+          price: price ? String(Math.round(parseFloat(price) * 100)) : undefined,
+          photos: photoMetas,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Upload failed");
+        throw new Error(data.error || "Failed to create share");
       }
 
-      setShareLink(data.share.link);
       setProgress(100);
+      setShareLink(data.share.link);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -172,7 +234,7 @@ export default function UploadPage() {
             />
             {files.length > 0 && (
               <p className="mt-2 text-sm text-gray-500">
-                {files.length} file(s) selected
+                {files.length} file(s) selected — uploading directly to Cloudinary
               </p>
             )}
           </div>
@@ -225,7 +287,7 @@ export default function UploadPage() {
               disabled={uploading || files.length === 0}
               className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {uploading ? "Uploading..." : "Upload & Get Share Link"}
+              {uploading ? `Uploading to Cloudinary (${progress}%)...` : "Upload & Get Share Link"}
             </button>
           </div>
         </form>

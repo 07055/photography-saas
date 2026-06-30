@@ -1,6 +1,4 @@
 import { v2 as cloudinary } from "cloudinary";
-import sharp from "sharp";
-import { Readable } from "stream";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
@@ -8,45 +6,16 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
-export async function isValidImage(buffer: Buffer): Promise<boolean> {
-  try {
-    const metadata = await sharp(buffer).metadata();
-    return !!metadata.format && ["jpeg", "png", "webp", "gif", "tiff", "avif"].includes(metadata.format);
-  } catch {
-    return false;
-  }
-}
-
-export async function processImage(
-  buffer: Buffer,
-): Promise<{
-  originalPath: string;
-  thumbPath: string;
-  watermarkedPath: string;
-  width: number;
-  height: number;
-}> {
-  const metadata = await sharp(buffer).metadata();
-  const imgWidth = metadata.width ?? 800;
-  const imgHeight = metadata.height ?? 600;
-
-  const result = await new Promise<{ secure_url: string; public_id: string }>((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        resource_type: "image",
-      },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result!);
-      }
-    );
-    const readable = new Readable();
-    readable.push(buffer);
-    readable.push(null);
-    readable.pipe(uploadStream);
+export function buildPhotoUrls(publicId: string): {
+  originalUrl: string;
+  thumbUrl: string;
+  watermarkedUrl: string;
+} {
+  const originalUrl = cloudinary.url(publicId, {
+    secure: true,
+    quality: "auto:best",
+    format: "jpg",
   });
-
-  const publicId = result.public_id;
 
   const thumbUrl = cloudinary.url(publicId, {
     secure: true,
@@ -84,11 +53,5 @@ export async function processImage(
     ],
   });
 
-  return {
-    originalPath: result.secure_url,
-    thumbPath: thumbUrl,
-    watermarkedPath: watermarkedUrl,
-    width: imgWidth,
-    height: imgHeight,
-  };
+  return { originalUrl, thumbUrl, watermarkedUrl };
 }

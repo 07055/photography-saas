@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { processImage, isValidImage } from "@/lib/upload";
-import { MAX_UPLOAD_SIZE } from "@/lib/constants";
+import { buildPhotoUrls } from "@/lib/upload";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
@@ -52,50 +51,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const { publicId, width, height, fileSize, mimeType, title, description, tags, albumId, price: priceRaw } = await req.json();
 
-    if (!file) {
+    if (!publicId || !width || !height || !fileSize || !mimeType) {
       return NextResponse.json(
-        { error: "No file provided" },
+        { error: "Missing required photo metadata" },
         { status: 400 }
       );
     }
 
-    if (file.size > MAX_UPLOAD_SIZE) {
-      return NextResponse.json(
-        { error: "File too large. Maximum size is 20MB." },
-        { status: 400 }
-      );
-    }
-
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    if (!isValidImage(buffer)) {
-      return NextResponse.json(
-        { error: "File is not a valid image or format is unsupported" },
-        { status: 400 }
-      );
-    }
-
-    // Rough check first using buffer size
-    if (Number(subscription.storageUsed) + buffer.length > Number(subscription.storageLimit)) {
+    if (Number(subscription.storageUsed) + fileSize > Number(subscription.storageLimit)) {
       return NextResponse.json(
         { error: "Storage limit exceeded" },
         { status: 400 }
       );
     }
-
-    const { originalPath, thumbPath, watermarkedPath, width, height } = await processImage(
-      buffer,
-    );
-
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string;
-    const tags = formData.get("tags") as string;
-    const albumId = formData.get("albumId") as string;
-    const priceRaw = formData.get("price") as string;
 
     let price: number | null = null;
     if (priceRaw) {
@@ -121,17 +91,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const urls = buildPhotoUrls(publicId);
+
     const photo = await prisma.photo.create({
       data: {
-        title: title || file.name,
+        title: title || publicId,
         description: description || null,
-        originalUrl: originalPath,
-        thumbUrl: thumbPath,
-        blurredUrl: watermarkedPath,
+        originalUrl: urls.originalUrl,
+        thumbUrl: urls.thumbUrl,
+        blurredUrl: urls.watermarkedUrl,
         width,
         height,
-        fileSize: buffer.length,
-        mimeType: file.type,
+        fileSize,
+        mimeType,
         tags: tags || null,
         price,
         userId: session.user.id,
@@ -142,7 +114,7 @@ export async function POST(req: NextRequest) {
     await prisma.subscription.update({
       where: { userId: session.user.id },
       data: {
-        storageUsed: { increment: buffer.length },
+        storageUsed: { increment: fileSize },
       },
     });
 
