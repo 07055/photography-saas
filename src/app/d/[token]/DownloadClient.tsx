@@ -5,7 +5,6 @@ import { useState } from "react";
 type PurchasedPhoto = {
   id: string;
   title: string;
-  originalUrl: string;
   thumbUrl: string;
   mimeType: string;
 };

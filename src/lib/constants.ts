@@ -4,22 +4,14 @@ export const PLATFORM_FEE_PERCENT = 1;
 // Maximum upload file size in bytes (20MB)
 export const MAX_UPLOAD_SIZE = 20 * 1024 * 1024;
 
+import crypto from "crypto";
+
 export function generateToken(): string {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-  for (let i = 0; i < 32; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+  return crypto.randomUUID();
 }
 
 export function generateShareToken(): string {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-  for (let i = 0; i < 16; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
 }
 
 export function getBaseUrl(): string {

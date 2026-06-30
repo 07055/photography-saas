@@ -59,6 +59,10 @@ export default function AdminPage() {
     router.push("/login");
     return null;
   }
+  if (!session.user?.isAdmin) {
+    router.push("/dashboard");
+    return null;
+  }
 
   const formatKES = (cents: number) => "KSh " + (cents / 100).toLocaleString();
 

@@ -48,7 +48,6 @@ export default async function DownloadPage({
           photos={order.items.map((item) => ({
             id: item.photo.id,
             title: item.photo.title,
-            originalUrl: item.photo.originalUrl,
             thumbUrl: item.photo.thumbUrl,
             mimeType: item.photo.mimeType,
           }))}

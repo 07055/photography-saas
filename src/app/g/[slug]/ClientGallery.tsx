@@ -19,6 +19,7 @@ export default function ClientGallery({
   shareToken: string;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
@@ -84,6 +85,10 @@ export default function ClientGallery({
       setError("Please select at least one photo");
       return;
     }
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
     if (!phone) {
       setError("Please enter your M-Pesa phone number");
       return;
@@ -97,7 +102,7 @@ export default function ClientGallery({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: `customer-${shareToken}@photos.app`,
+          email,
           name,
           phone,
           photoIds: Array.from(selected),
@@ -251,6 +256,14 @@ export default function ClientGallery({
             <div className="flex items-center gap-3">
               <div className="flex flex-col gap-2">
                 <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Your email *"
+                  required
+                  className="px-3 py-2 border border-gray-300 rounded text-sm"
+                />
+                <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -268,7 +281,7 @@ export default function ClientGallery({
               </div>
               <button
                 onClick={handleCheckout}
-                disabled={loading || !phone}
+                disabled={loading || !email || !phone}
                 className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 whitespace-nowrap"
               >
                 {loading ? "Processing..." : "Pay with M-Pesa"}

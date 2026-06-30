@@ -175,7 +175,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Share upload error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to create share" },
+      { error: "Failed to create share" },
       { status: 500 }
     );
   }
