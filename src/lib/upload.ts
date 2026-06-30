@@ -13,8 +13,7 @@ export function buildPhotoUrls(publicId: string): {
 } {
   const originalUrl = cloudinary.url(publicId, {
     secure: true,
-    quality: "auto:best",
-    format: "jpg",
+    flags: "ignore_default_transformations",
   });
 
   const thumbUrl = cloudinary.url(publicId, {
