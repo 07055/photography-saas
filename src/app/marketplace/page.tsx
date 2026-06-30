@@ -51,7 +51,7 @@ export default function MarketplacePage() {
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-4">
               <Link href="/" className="text-xl font-bold text-gray-900">
-                GrapherPeaces
+                GrapherPeace's
               </Link>
               <span className="text-sm font-medium text-gray-900">Marketplace</span>
             </div>

@@ -5,7 +5,7 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">GrapherPeaces</h1>
+          <h1 className="text-2xl font-bold text-gray-900">GrapherPeace's</h1>
           <div className="flex gap-4">
             <Link
               href="/login"
@@ -91,7 +91,7 @@ export default function Home() {
       <footer className="border-t border-gray-200 mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <p className="text-center text-gray-500 text-sm">
-            GrapherPeaces - Photography SaaS
+            GrapherPeace's - Photography SaaS
           </p>
         </div>
       </footer>

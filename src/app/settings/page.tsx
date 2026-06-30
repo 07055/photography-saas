@@ -79,7 +79,7 @@ export default function SettingsPage() {
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-4">
               <Link href="/dashboard" className="text-xl font-bold text-gray-900">
-                GrapherPeaces
+                GrapherPeace's
               </Link>
             </div>
             <div className="flex items-center gap-4">

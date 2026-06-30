@@ -24,7 +24,7 @@ export default async function GalleryPage() {
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-6">
               <Link href="/dashboard" className="text-xl font-bold text-gray-900">
-                GrapherPeaces
+                GrapherPeace's
               </Link>
               <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
                 Dashboard

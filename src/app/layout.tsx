@@ -15,7 +15,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "GrapherPeaces - Photography SaaS",
+  title: "GrapherPeace's - Photography SaaS",
   description: "Upload, organize, and share your photography",
 };
 

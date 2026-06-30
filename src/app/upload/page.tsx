@@ -131,7 +131,7 @@ export default function UploadPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16 items-center">
               <Link href="/dashboard" className="text-xl font-bold text-gray-900">
-                GrapherPeaces
+                GrapherPeace's
               </Link>
             </div>
           </div>
@@ -178,7 +178,7 @@ export default function UploadPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link href="/dashboard" className="text-xl font-bold text-gray-900">
-              GrapherPeaces
+              GrapherPeace's
             </Link>
             <div className="flex items-center gap-3">
               <Link
