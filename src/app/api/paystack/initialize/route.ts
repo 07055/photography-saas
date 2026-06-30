@@ -2,9 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initializeTransaction } from "@/lib/paystack";
 import { PLATFORM_FEE_PERCENT, getBaseUrl, formatPhoneToInternational } from "@/lib/constants";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown";
+    const { allowed, retryAfter } = checkRateLimit(`paystack:init:${ip}`, 10, 60000);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: `Too many requests. Try again in ${retryAfter} seconds.` },
+        { status: 429 }
+      );
+    }
+
     const { email, name, phone, photoIds, shareToken } = await req.json();
 
     if (!email || !photoIds || !photoIds.length || !shareToken) {

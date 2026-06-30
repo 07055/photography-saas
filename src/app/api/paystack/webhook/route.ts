@@ -39,14 +39,25 @@ export async function POST(req: NextRequest) {
 
       if (result.status && result.data.status === "success") {
         const metadataRaw = result.data.metadata;
-        const metadata = (typeof metadataRaw === "string" ? JSON.parse(metadataRaw) : metadataRaw) as {
-          photoIds: string[];
-          shareToken: string;
-          shareUserId: string;
+        let metadata: {
+          photoIds?: string[];
+          shareToken?: string;
+          shareUserId?: string;
           clientName?: string;
           photosTotal?: number;
           platformFee?: number;
         };
+        try {
+          metadata = (typeof metadataRaw === "string" ? JSON.parse(metadataRaw) : metadataRaw) as typeof metadata;
+        } catch {
+          console.error("Webhook: failed to parse metadata");
+          return NextResponse.json({ received: true });
+        }
+
+        if (!metadata.photoIds?.length || !metadata.shareToken || !metadata.shareUserId) {
+          console.error("Webhook: missing required metadata fields", metadata);
+          return NextResponse.json({ received: true });
+        }
 
         const photos = await prisma.photo.findMany({
           where: { id: { in: metadata.photoIds } },
@@ -72,7 +83,7 @@ export async function POST(req: NextRequest) {
                 releaseToken,
                 releasedAt: new Date(),
                 shareId: share.id,
-                userId: metadata.shareUserId,
+                userId: metadata.shareUserId!,
                 items: {
                   create: photos.map((p) => ({
                     photoId: p.id,
@@ -83,11 +94,17 @@ export async function POST(req: NextRequest) {
             });
 
             if (metadata.photosTotal && metadata.shareUserId) {
-              await autoPayout(metadata.shareUserId, metadata.photosTotal, o.id, tx);
+              try {
+                await autoPayout(metadata.shareUserId, metadata.photosTotal, o.id, tx);
+              } catch (payoutErr) {
+                console.error("Webhook: auto-payout failed for order", o.id, payoutErr);
+              }
             }
 
             return;
           });
+        } else {
+          console.error("Webhook: share not found for token", metadata.shareToken);
         }
       }
     } catch (err) {

@@ -43,7 +43,12 @@ export async function autoPayout(
       where: { id: payout.id },
       data: { status: result.status ? "completed" : "failed" },
     });
-  } catch {
+
+    if (!result.status) {
+      console.error(`Payout failed for photographer ${photographerId}, order ${orderId}: ${result.message}`);
+    }
+  } catch (err) {
+    console.error(`Payout exception for photographer ${photographerId}, order ${orderId}:`, err);
     await db.payout.update({
       where: { id: payout.id },
       data: { status: "failed" },

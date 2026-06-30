@@ -143,9 +143,8 @@ export async function GET(req: NextRequest) {
       });
     } catch (e) {
       console.error("Transaction failed:", e);
-      const msg = e instanceof Error ? e.message : "Unknown error";
       return NextResponse.json(
-        { error: "Failed to verify payment", detail: msg },
+        { error: "Failed to verify payment" },
         { status: 500 }
       );
     }

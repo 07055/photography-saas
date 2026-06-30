@@ -1,16 +1,24 @@
 import crypto from "crypto";
 
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY!;
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_API = "https://api.paystack.co";
+
+function requireSecretKey(): string {
+  if (!PAYSTACK_SECRET_KEY) {
+    throw new Error("PAYSTACK_SECRET_KEY is not configured");
+  }
+  return PAYSTACK_SECRET_KEY;
+}
 
 export async function paystackFetch(
   path: string,
   options: RequestInit = {}
 ) {
+  const key = requireSecretKey();
   const res = await fetch(`${PAYSTACK_API}${path}`, {
     ...options,
     headers: {
-      Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+      Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
       ...options.headers,
     },
@@ -31,12 +39,13 @@ export async function initializeTransaction({
   callbackUrl?: string;
   phone?: string;
 }) {
+  const key = requireSecretKey();
   const body: Record<string, unknown> = {
     email,
     amount,
     currency: "KES",
     channels: phone
-      ? PAYSTACK_SECRET_KEY.startsWith("sk_test_")
+      ? key.startsWith("sk_test_")
         ? ["card", "mobile_money"]
         : ["mpesa", "card", "bank_transfer", "mobile_money"]
       : ["card", "bank_transfer", "mobile_money"],
@@ -49,7 +58,7 @@ export async function initializeTransaction({
   const res = await fetch(`${PAYSTACK_API}/transaction/initialize`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+      Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
@@ -63,11 +72,12 @@ export async function initializeTransaction({
 }
 
 export async function verifyTransaction(reference: string) {
+  const key = requireSecretKey();
   const res = await fetch(
     `${PAYSTACK_API}/transaction/verify/${reference}`,
     {
       headers: {
-        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        Authorization: `Bearer ${key}`,
       },
     }
   );
@@ -91,8 +101,9 @@ export function verifyWebhookSignature(
   body: string,
   signature: string
 ): boolean {
+  const key = requireSecretKey();
   const hash = crypto
-    .createHmac("sha512", PAYSTACK_SECRET_KEY)
+    .createHmac("sha512", key)
     .update(body)
     .digest("hex");
   return hash === signature;
@@ -106,10 +117,11 @@ export async function createTransferRecipient({
   name: string;
   phone: string;
 }) {
+  const key = requireSecretKey();
   const res = await fetch(`${PAYSTACK_API}/transferrecipient`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+      Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -138,10 +150,11 @@ export async function initiateTransfer({
   recipient: string; // recipient code
   reason?: string;
 }) {
+  const key = requireSecretKey();
   const res = await fetch(`${PAYSTACK_API}/transfer`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+      Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
