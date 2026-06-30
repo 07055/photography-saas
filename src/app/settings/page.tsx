@@ -182,8 +182,8 @@ export default function SettingsPage() {
           <ul className="text-sm text-gray-600 space-y-2">
             <li>• A {PLATFORM_FEE_PERCENT}% service fee is added on top of every sale (client pays it)</li>
             <li>• A {PHOTOGRAPHER_FEE_PERCENT}% fee is deducted from your payout (covers Paystack fees)</li>
-            <li>• Client pays: your price + {PLATFORM_FEE_PERCENT}% (e.g. KSh 1000 → client pays KSh {1000 + Math.round(1000 * PLATFORM_FEE_PERCENT / 100)})</li>
-            <li>• You receive: your price — {PHOTOGRAPHER_FEE_PERCENT}% (e.g. KSh 1000 → you get KSh {1000 - Math.round(1000 * PHOTOGRAPHER_FEE_PERCENT / 100)})</li>
+            <li>• Client pays: your price + {PLATFORM_FEE_PERCENT}% (e.g. KSh 1000 → client pays KSh {(1000 + Math.round(1000 * PLATFORM_FEE_PERCENT / 100)).toLocaleString()})</li>
+            <li>• You receive: your price — {PHOTOGRAPHER_FEE_PERCENT}% (e.g. KSh 1000 → you get KSh {(1000 - Math.round(1000 * PHOTOGRAPHER_FEE_PERCENT / 100)).toLocaleString()})</li>
             <li>• Every sale pays out immediately — no minimum threshold</li>
           </ul>
         </div>
