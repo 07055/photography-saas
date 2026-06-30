@@ -33,7 +33,7 @@ export default function RegisterPage() {
       await signIn("credentials", {
         email,
         password,
-        callbackUrl: "/dashboard",
+        callbackUrl: "/settings",
       });
     } catch {
       setError("Something went wrong");
