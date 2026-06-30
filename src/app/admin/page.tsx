@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import MobileNav from "@/components/MobileNav";
 
 type Photographer = {
   id: string;
@@ -68,24 +69,27 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
+      <nav className="bg-white shadow-sm relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-bold text-gray-900">Admin</h1>
-              <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
+              <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 hidden sm:inline">
                 Dashboard
               </Link>
             </div>
-            <div className="flex items-center gap-4">
+            <MobileNav>
+              <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
+                Dashboard
+              </Link>
               <span className="text-sm text-gray-600">{session.user?.email}</span>
-            </div>
+            </MobileNav>
           </div>
         </div>
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-4 mb-6">
+        <div className="flex gap-4 mb-6 overflow-x-auto pb-2">
           <button
             onClick={() => setTab("photographers")}
             className={`px-4 py-2 rounded text-sm font-medium ${
@@ -124,7 +128,7 @@ export default function AdminPage() {
               <div className="divide-y divide-gray-100">
                 {photographers.map((p) => (
                   <div key={p.id} className="px-6 py-4">
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                       <div>
                         <p className="font-medium text-gray-900">
                           {p.name ?? "Unnamed"}
@@ -139,7 +143,7 @@ export default function AdminPage() {
                           </p>
                         )}
                       </div>
-                      <div className="text-right">
+                      <div className="sm:text-right">
                         <p className="text-sm text-gray-500">Earnings</p>
                         <p className="font-bold text-gray-900">
                           {formatKES(p.subscriptions?.earningsBalance ?? 0)}
@@ -172,7 +176,7 @@ export default function AdminPage() {
               <div className="divide-y divide-gray-100">
                 {payouts.map((p) => (
                   <div key={p.id} className="px-6 py-4">
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-1">
                       <div>
                         <p className="font-medium text-gray-900">
                           {p.user.name ?? p.user.email}
@@ -181,7 +185,7 @@ export default function AdminPage() {
                           {p.status}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="sm:text-right">
                         <p className="font-bold text-gray-900">
                           {formatKES(p.amount)}
                         </p>

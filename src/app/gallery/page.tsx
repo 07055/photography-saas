@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import MobileNav from "@/components/MobileNav";
 
 export default async function GalleryPage() {
   const session = await getServerSession(authOptions);
@@ -19,27 +20,43 @@ export default async function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
+      <nav className="bg-white shadow-sm relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-6">
-              <Link href="/dashboard" className="text-xl font-bold text-gray-900">
+              <Link href="/dashboard" className="text-xl font-bold text-gray-900 whitespace-nowrap">
                 GrapherPeace's
               </Link>
-              <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
-                Dashboard
-              </Link>
-              <Link href="/gallery" className="text-sm font-medium text-blue-600">
-                Gallery
-              </Link>
+              <div className="hidden sm:flex items-center gap-6">
+                <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
+                  Dashboard
+                </Link>
+                <Link href="/gallery" className="text-sm font-medium text-blue-600">
+                  Gallery
+                </Link>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <Link
                 href="/upload"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                className="hidden sm:inline-block bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
               >
                 Upload Photos
               </Link>
+              <MobileNav>
+                <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
+                  Dashboard
+                </Link>
+                <Link href="/gallery" className="text-sm font-medium text-blue-600">
+                  Gallery
+                </Link>
+                <Link
+                  href="/upload"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 text-center"
+                >
+                  Upload Photos
+                </Link>
+              </MobileNav>
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { useState, FormEvent, ChangeEvent } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import CopyButton from "@/components/CopyButton";
+import MobileNav from "@/components/MobileNav";
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
 const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!;
@@ -174,13 +175,13 @@ export default function UploadPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
+      <nav className="bg-white shadow-sm relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link href="/dashboard" className="text-xl font-bold text-gray-900">
               GrapherPeace's
             </Link>
-            <div className="flex items-center gap-3">
+            <MobileNav>
               <Link
                 href="/dashboard"
                 className="text-sm text-gray-600 hover:text-gray-900"
@@ -194,7 +195,7 @@ export default function UploadPage() {
               >
                 Logout
               </Link>
-            </div>
+            </MobileNav>
           </div>
         </div>
       </nav>

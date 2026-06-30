@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import CopyButton from "@/components/CopyButton";
+import MobileNav from "@/components/MobileNav";
 import { PLATFORM_FEE_PERCENT, PHOTOGRAPHER_FEE_PERCENT, getBaseUrl } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -69,13 +70,13 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
+      <nav className="bg-white shadow-sm relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
               <h1 className="text-xl font-bold text-gray-900">GrapherPeace's</h1>
             </div>
-            <div className="flex items-center gap-4">
+            <MobileNav>
               <Link
                 href="/marketplace"
                 className="text-sm text-gray-600 hover:text-gray-900"
@@ -85,7 +86,7 @@ export default async function DashboardPage() {
               {storageLimit > 0 && (
                 <Link
                   href="/upload"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 text-center"
                 >
                   Upload Photos
                 </Link>
@@ -111,7 +112,7 @@ export default async function DashboardPage() {
               >
                 Logout
               </Link>
-            </div>
+            </MobileNav>
           </div>
         </div>
       </nav>
@@ -120,7 +121,7 @@ export default async function DashboardPage() {
         {/* Setup banner if no bank details */}
         {!subaccount && storageLimit === 0 ? (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <p className="font-medium text-red-800">
                   Set up M-Pesa Payment Details
@@ -220,7 +221,7 @@ export default async function DashboardPage() {
           ) : (
             <div className="divide-y divide-gray-100">
               {shares.map((s) => (
-                <div key={s.id} className="px-6 py-4 flex items-center justify-between">
+                <div key={s.id} className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                       <p className="font-medium text-gray-900">{s.title ?? "Untitled"}</p>
                       <p className="text-sm text-gray-500">
@@ -275,7 +276,7 @@ export default async function DashboardPage() {
             <div className="divide-y divide-gray-100">
               {orders.map((order) => (
                 <div key={order.id} className="px-6 py-4">
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-1">
                     <div>
                       <p className="font-medium text-gray-900">
                         {order.email}
@@ -284,7 +285,7 @@ export default async function DashboardPage() {
                         {order.share?.title ?? "Share"} · {order._count.items} photo(s)
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="sm:text-right">
                       <p className="font-medium text-gray-900">
                         KSh {(order.amount / 100).toLocaleString()}
                       </p>

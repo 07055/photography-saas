@@ -184,7 +184,7 @@ export default function ClientGallery({
           <p className="text-gray-500">No photos available in this share.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8 select-none" style={{ WebkitTouchCallout: "none" } as React.CSSProperties}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8 pb-24 select-none" style={{ WebkitTouchCallout: "none" } as React.CSSProperties}>
           {photos.map((photo) => {
             const isSelected = selected.has(photo.id);
             return (
@@ -217,9 +217,9 @@ export default function ClientGallery({
                   )}
                 </div>
                 {isSelected && (
-                  <div className="absolute top-2 right-2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                  <div className="absolute top-1 right-1 w-10 h-10 sm:w-8 sm:h-8 bg-blue-600 rounded-full flex items-center justify-center">
                     <svg
-                      className="w-4 h-4 text-white"
+                      className="w-6 h-6 sm:w-5 sm:h-5 text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -241,8 +241,8 @@ export default function ClientGallery({
 
       {selected.size > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div>
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex-shrink-0">
               <p className="text-sm text-gray-600">
                 {selected.size} photo(s) selected
               </p>
@@ -253,22 +253,22 @@ export default function ClientGallery({
                 Total: KSh {(total / 100).toLocaleString()}
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
+              <div className="flex flex-col sm:flex-row gap-2 flex-1">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Your email *"
                   required
-                  className="px-3 py-2 border border-gray-300 rounded text-sm"
+                  className="px-3 py-2 border border-gray-300 rounded text-sm flex-1 min-w-0"
                 />
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your name (optional)"
-                  className="px-3 py-2 border border-gray-300 rounded text-sm"
+                  className="px-3 py-2 border border-gray-300 rounded text-sm flex-1 min-w-0"
                 />
                 <input
                   type="tel"
@@ -276,13 +276,13 @@ export default function ClientGallery({
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="M-Pesa phone (0712345678) *"
                   required
-                  className="px-3 py-2 border border-gray-300 rounded text-sm"
+                  className="px-3 py-2 border border-gray-300 rounded text-sm flex-1 min-w-0"
                 />
               </div>
               <button
                 onClick={handleCheckout}
                 disabled={loading || !email || !phone}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 whitespace-nowrap"
+                className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 whitespace-nowrap min-w-[160px]"
               >
                 {loading ? "Processing..." : "Pay with M-Pesa"}
               </button>

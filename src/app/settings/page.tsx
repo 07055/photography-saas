@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import MobileNav from "@/components/MobileNav";
 import { PLATFORM_FEE_PERCENT, PHOTOGRAPHER_FEE_PERCENT } from "@/lib/constants";
 
 export default function SettingsPage() {
@@ -74,15 +75,15 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
+      <nav className="bg-white shadow-sm relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-4">
               <Link href="/dashboard" className="text-xl font-bold text-gray-900">
                 GrapherPeace's
               </Link>
             </div>
-            <div className="flex items-center gap-4">
+            <MobileNav>
               <Link
                 href="/dashboard"
                 className="text-sm text-gray-600 hover:text-gray-900"
@@ -96,7 +97,7 @@ export default function SettingsPage() {
               >
                 Logout
               </Link>
-            </div>
+            </MobileNav>
           </div>
         </div>
       </nav>
