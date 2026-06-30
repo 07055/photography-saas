@@ -1,10 +1,13 @@
-// Platform takes 1% service fee on every transaction
-export const PLATFORM_FEE_PERCENT = 1;
+import crypto from "crypto";
+
+// Platform adds 0.75% on top of every sale (client surcharge)
+export const PLATFORM_FEE_PERCENT = 0.75;
+
+// 0.75% deducted from photographer's payout to share Paystack costs
+export const PHOTOGRAPHER_FEE_PERCENT = 0.75;
 
 // Maximum upload file size in bytes (20MB)
 export const MAX_UPLOAD_SIZE = 20 * 1024 * 1024;
-
-import crypto from "crypto";
 
 export function generateToken(): string {
   return crypto.randomUUID();

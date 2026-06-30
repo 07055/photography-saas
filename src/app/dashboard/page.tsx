@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import CopyButton from "@/components/CopyButton";
-import { PLATFORM_FEE_PERCENT, getBaseUrl } from "@/lib/constants";
+import { PLATFORM_FEE_PERCENT, PHOTOGRAPHER_FEE_PERCENT, getBaseUrl } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -127,8 +127,8 @@ export default async function DashboardPage() {
                 </p>
                 <p className="text-sm text-red-700 mt-1">
                   Add your M-Pesa details in Settings to start selling. A {PLATFORM_FEE_PERCENT}% service fee
-                  is added to every sale (the client pays it), and your full earnings
-                  are auto-sent to your M-Pesa.
+                  is added to every sale (the client pays it), and a {PHOTOGRAPHER_FEE_PERCENT}% fee
+                  is deducted from your payout. Your earnings are auto-sent to your M-Pesa.
                 </p>
               </div>
               <Link

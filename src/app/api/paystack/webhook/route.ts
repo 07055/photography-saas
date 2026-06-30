@@ -45,7 +45,8 @@ export async function POST(req: NextRequest) {
           shareUserId?: string;
           clientName?: string;
           photosTotal?: number;
-          platformFee?: number;
+          clientSurcharge?: number;
+          photographerPayout?: number;
         };
         try {
           metadata = (typeof metadataRaw === "string" ? JSON.parse(metadataRaw) : metadataRaw) as typeof metadata;
@@ -93,9 +94,9 @@ export async function POST(req: NextRequest) {
               },
             });
 
-            if (metadata.photosTotal && metadata.shareUserId) {
+            if (metadata.photographerPayout && metadata.shareUserId) {
               try {
-                await autoPayout(metadata.shareUserId, metadata.photosTotal, o.id, tx);
+                await autoPayout(metadata.shareUserId, metadata.photographerPayout, o.id, tx);
               } catch (payoutErr) {
                 console.error("Webhook: auto-payout failed for order", o.id, payoutErr);
               }

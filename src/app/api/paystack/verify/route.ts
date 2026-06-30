@@ -68,7 +68,8 @@ export async function GET(req: NextRequest) {
         shareUserId: string;
         clientName?: string;
         photosTotal?: number;
-        platformFee?: number;
+        clientSurcharge?: number;
+        photographerPayout?: number;
       };
     } catch (e) {
       console.error("Failed to parse metadata:", e, metadataRaw);
@@ -131,9 +132,9 @@ export async function GET(req: NextRequest) {
           },
         });
 
-        if (metadata.photosTotal && share.userId) {
+        if (metadata.photographerPayout && share.userId) {
           try {
-            await autoPayout(share.userId, metadata.photosTotal, o.id, tx);
+            await autoPayout(share.userId, metadata.photographerPayout, o.id, tx);
           } catch (payoutErr) {
             console.error("Payout failed (non-fatal):", payoutErr);
           }

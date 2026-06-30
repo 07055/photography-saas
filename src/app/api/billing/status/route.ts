@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { PLATFORM_FEE_PERCENT } from "@/lib/constants";
+import { PLATFORM_FEE_PERCENT, PHOTOGRAPHER_FEE_PERCENT } from "@/lib/constants";
 
 export async function GET() {
   try {
@@ -25,6 +25,7 @@ export async function GET() {
       hasSubaccount: !!subaccount,
       subaccountCode: subaccount?.subaccountCode ?? null,
       platformFeePercent: PLATFORM_FEE_PERCENT,
+      photographerFeePercent: PHOTOGRAPHER_FEE_PERCENT,
     });
   } catch {
     return NextResponse.json(

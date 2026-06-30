@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initializeTransaction } from "@/lib/paystack";
-import { PLATFORM_FEE_PERCENT, getBaseUrl, formatPhoneToInternational } from "@/lib/constants";
+import { PLATFORM_FEE_PERCENT, PHOTOGRAPHER_FEE_PERCENT, getBaseUrl, formatPhoneToInternational } from "@/lib/constants";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
@@ -62,9 +62,11 @@ export async function POST(req: NextRequest) {
       0
     );
 
-    // Add 1% platform fee on top
-    const fee = Math.round(photosTotal * PLATFORM_FEE_PERCENT / 100);
-    const totalAmount = photosTotal + fee;
+    // 0.75% client surcharge, 0.75% photographer deduction = 1.5% total (covers Paystack fees)
+    const clientSurcharge = Math.round(photosTotal * PLATFORM_FEE_PERCENT / 100);
+    const photographerDeduction = Math.round(photosTotal * PHOTOGRAPHER_FEE_PERCENT / 100);
+    const totalAmount = photosTotal + clientSurcharge;
+    const photographerPayout = photosTotal - photographerDeduction;
 
     const baseUrl = getBaseUrl();
 
@@ -81,7 +83,8 @@ export async function POST(req: NextRequest) {
         clientName: name,
         clientPhone: phone,
         photosTotal,
-        platformFee: fee,
+        clientSurcharge,
+        photographerPayout,
       },
     });
 
