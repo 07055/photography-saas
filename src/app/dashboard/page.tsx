@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import CopyButton from "@/components/CopyButton";
+import Logo from "@/components/Logo";
 import MobileNav from "@/components/MobileNav";
 import { PLATFORM_FEE_PERCENT, PHOTOGRAPHER_FEE_PERCENT, getBaseUrl } from "@/lib/constants";
 
@@ -74,7 +75,7 @@ export default async function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">GrapherPeace's</h1>
+              <Logo />
             </div>
             <MobileNav>
               <Link

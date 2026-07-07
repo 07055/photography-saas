@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import MobileNav from "@/components/MobileNav";
 
 export default async function GalleryPage() {
@@ -24,9 +25,7 @@ export default async function GalleryPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-6">
-              <Link href="/dashboard" className="text-xl font-bold text-gray-900 whitespace-nowrap">
-                GrapherPeace's
-              </Link>
+              <Logo />
               <div className="hidden sm:flex items-center gap-6">
                 <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
                   Dashboard

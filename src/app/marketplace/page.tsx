@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 const CATEGORIES = [
   { value: "", label: "All" },
@@ -50,9 +51,7 @@ export default function MarketplacePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-4">
-              <Link href="/" className="text-xl font-bold text-gray-900">
-                GrapherPeace's
-              </Link>
+              <Logo href="/" />
               <span className="text-sm font-medium text-gray-900">Marketplace</span>
             </div>
             <Link

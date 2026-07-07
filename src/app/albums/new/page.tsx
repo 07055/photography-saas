@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 export default function NewAlbumPage() {
   const router = useRouter();
@@ -40,9 +41,7 @@ export default function NewAlbumPage() {
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Link href="/dashboard" className="text-xl font-bold text-gray-900">
-            GrapherPeace's
-          </Link>
+          <Logo />
         </div>
       </nav>
 

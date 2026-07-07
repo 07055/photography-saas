@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import SetPriceButton from "./SetPriceButton";
 import TogglePublicButton from "./TogglePublicButton";
 import { getBaseUrl } from "@/lib/constants";
@@ -30,9 +31,7 @@ export default async function ManageAlbumPage({
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
-          <Link href="/dashboard" className="text-xl font-bold text-gray-900">
-            GrapherPeace's
-          </Link>
+          <Logo />
           <div className="flex items-center gap-4">
             {album.isPublic ? (
               <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
