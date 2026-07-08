@@ -30,7 +30,7 @@ export function buildPhotoUrls(publicId: string): {
     transformation: [
       { width: 1600, crop: "fit", quality: "auto:best", format: "jpg" },
       {
-        overlay: "text:Arial_100_bold:GrapherPeace's",
+        overlay: "text:Arial_100_bold:LinkLense",
         color: "white",
         opacity: 60,
         angle: -45,
@@ -39,7 +39,7 @@ export function buildPhotoUrls(publicId: string): {
         crop: "scale",
       },
       {
-        overlay: "text:Arial_60_bold:GrapherPeace's",
+        overlay: "text:Arial_60_bold:LinkLense",
         color: "white",
         opacity: 40,
         angle: -45,

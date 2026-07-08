@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import SessionProvider from "@/components/SessionProvider";
+import ChatBot from "@/components/ChatBot";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -15,7 +16,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "GrapherPeace's - Photography SaaS",
+  title: "LinkLense - Photography SaaS",
   description: "Upload, organize, and share your photography",
   icons: {
     icon: [
@@ -45,7 +46,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+          {children}
+          <ChatBot />
+        </SessionProvider>
       </body>
     </html>
   );
