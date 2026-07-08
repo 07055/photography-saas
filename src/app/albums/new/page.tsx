@@ -38,19 +38,19 @@ export default function NewAlbumPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
+    <div className="min-h-screen bg-surface-muted">
+      <nav className="bg-card shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <Logo />
         </div>
       </nav>
 
       <main className="max-w-lg mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">
+        <h1 className="text-2xl font-bold text-card-foreground mb-8">
           Create New Album
         </h1>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-card rounded-lg shadow p-6 space-y-6">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
               {error}
@@ -58,7 +58,7 @@ export default function NewAlbumPage() {
           )}
 
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="name" className="block text-sm font-medium text-card-foreground">
               Album Name
             </label>
             <input
@@ -67,12 +67,12 @@ export default function NewAlbumPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="mt-1 block w-full px-3 py-2 border border-input-border rounded-md bg-input-bg text-input-text placeholder-input-placeholder"
             />
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="description" className="block text-sm font-medium text-card-foreground">
               Description (optional)
             </label>
             <textarea
@@ -80,7 +80,7 @@ export default function NewAlbumPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="mt-1 block w-full px-3 py-2 border border-input-border rounded-md bg-input-bg text-input-text placeholder-input-placeholder"
             />
           </div>
 
@@ -90,9 +90,9 @@ export default function NewAlbumPage() {
               type="checkbox"
               checked={isPublic}
               onChange={(e) => setIsPublic(e.target.checked)}
-              className="rounded border-gray-300"
+              className="rounded border-input-border"
             />
-            <label htmlFor="isPublic" className="text-sm text-gray-700">
+            <label htmlFor="isPublic" className="text-sm text-card-foreground">
               Make this album public (clients can view and purchase photos)
             </label>
           </div>
@@ -100,7 +100,7 @@ export default function NewAlbumPage() {
           <div className="flex gap-4">
             <Link
               href="/dashboard"
-              className="flex-1 text-center py-2 px-4 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
+              className="flex-1 text-center py-2 px-4 border border-input-border rounded-md text-sm text-card-foreground hover:bg-surface-muted"
             >
               Cancel
             </Link>

@@ -30,7 +30,7 @@ export default function CreateAdPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  if (status === "loading") return <div className="min-h-screen flex items-center justify-center"><p className="text-gray-500">Loading...</p></div>;
+  if (status === "loading") return <div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground">Loading...</p></div>;
   if (!session) {
     router.push("/login");
     return null;
@@ -71,15 +71,15 @@ export default function CreateAdPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
+    <div className="min-h-screen bg-surface-muted">
+      <nav className="bg-card shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-4">
               <Logo href="/" />
               <Link
                 href="/marketplace"
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-sm text-muted-foreground hover:text-card-foreground"
               >
                 Marketplace
               </Link>
@@ -89,7 +89,7 @@ export default function CreateAdPage() {
       </nav>
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">Post an Ad</h1>
+        <h1 className="text-2xl font-bold text-card-foreground mb-8">Post an Ad</h1>
 
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
@@ -97,16 +97,16 @@ export default function CreateAdPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-card rounded-lg shadow p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-card-foreground">
               Category
             </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full px-3 py-2 border border-input-border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-input-bg text-input-text placeholder-input-placeholder"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
@@ -117,7 +117,7 @@ export default function CreateAdPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-card-foreground">
               Title
             </label>
             <input
@@ -126,12 +126,12 @@ export default function CreateAdPage() {
               onChange={(e) => setTitle(e.target.value)}
               required
               placeholder="e.g. Wedding Photography, Canon EOS R5 for Sale"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full px-3 py-2 border border-input-border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-input-bg text-input-text placeholder-input-placeholder"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-card-foreground">
               Description
             </label>
             <textarea
@@ -140,12 +140,12 @@ export default function CreateAdPage() {
               required
               rows={4}
               placeholder="Describe what you're offering..."
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full px-3 py-2 border border-input-border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-input-bg text-input-text placeholder-input-placeholder"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-card-foreground">
               Price (KES) — optional
             </label>
             <input
@@ -153,12 +153,12 @@ export default function CreateAdPage() {
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               placeholder="e.g. 50000 for KSh 50,000"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full px-3 py-2 border border-input-border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-input-bg text-input-text placeholder-input-placeholder"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-card-foreground">
               Location — optional
             </label>
             <input
@@ -166,18 +166,18 @@ export default function CreateAdPage() {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Nairobi, Mombasa"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full px-3 py-2 border border-input-border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-input-bg text-input-text placeholder-input-placeholder"
             />
           </div>
 
           <div className="border-t pt-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-4">
+            <h3 className="text-sm font-medium text-card-foreground mb-4">
               Contact Information
             </h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-card-foreground">
                   Your Name
                 </label>
                 <input
@@ -186,12 +186,12 @@ export default function CreateAdPage() {
                   onChange={(e) => setContactName(e.target.value)}
                   required
                   placeholder="John Doe"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-input-border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-input-bg text-input-text placeholder-input-placeholder"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-card-foreground">
                   Phone Number
                 </label>
                 <input
@@ -200,12 +200,12 @@ export default function CreateAdPage() {
                   onChange={(e) => setContactPhone(e.target.value)}
                   required
                   placeholder="0712345678"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-input-border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-input-bg text-input-text placeholder-input-placeholder"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-card-foreground">
                   Email — optional
                 </label>
                 <input
@@ -213,7 +213,7 @@ export default function CreateAdPage() {
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder="john@example.com"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-input-border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-input-bg text-input-text placeholder-input-placeholder"
                 />
               </div>
             </div>
@@ -222,7 +222,7 @@ export default function CreateAdPage() {
           <div className="flex gap-4">
             <Link
               href="/marketplace"
-              className="flex-1 text-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="flex-1 text-center py-2 px-4 border border-input-border rounded-md shadow-sm text-sm font-medium text-card-foreground bg-card hover:bg-surface-muted"
             >
               Cancel
             </Link>

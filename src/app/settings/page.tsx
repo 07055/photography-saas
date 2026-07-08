@@ -68,15 +68,15 @@ export default function SettingsPage() {
     }
   };
 
-  if (status === "loading") return <div className="min-h-screen flex items-center justify-center"><p className="text-gray-500">Loading...</p></div>;
+  if (status === "loading") return <div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground">Loading...</p></div>;
   if (!session) {
     router.push("/login");
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm relative">
+    <div className="min-h-screen bg-surface-muted">
+      <nav className="bg-card shadow-sm relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-4">
@@ -85,14 +85,14 @@ export default function SettingsPage() {
             <MobileNav>
               <Link
                 href="/dashboard"
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-sm text-muted-foreground hover:text-card-foreground"
               >
                 Dashboard
               </Link>
-              <span className="text-sm text-gray-600">{session.user?.email}</span>
+              <span className="text-sm text-muted-foreground">{session.user?.email}</span>
               <Link
                 href="/api/auth/signout"
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-muted-foreground hover:text-card-foreground"
               >
                 Logout
               </Link>
@@ -102,7 +102,7 @@ export default function SettingsPage() {
       </nav>
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">Settings</h1>
+        <h1 className="text-2xl font-bold text-card-foreground mb-8">Settings</h1>
 
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
@@ -115,11 +115,11 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="bg-card rounded-lg shadow p-6 mb-8">
+          <h2 className="text-lg font-medium text-card-foreground mb-4">
             M-Pesa Payout Settings
           </h2>
-          <p className="text-sm text-gray-600 mb-6">
+          <p className="text-sm text-muted-foreground mb-6">
             Add your M-Pesa number. After every sale, your earnings will be
             automatically sent here — no need to wait for manual payouts.
           </p>
@@ -138,7 +138,7 @@ export default function SettingsPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-card-foreground">
                 M-Pesa Phone Number
               </label>
               <input
@@ -147,12 +147,12 @@ export default function SettingsPage() {
                 onChange={(e) => setMpesaPhone(e.target.value)}
                 required
                 placeholder="0712345678"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-input-border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-input-bg text-input-text placeholder-input-placeholder"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-card-foreground">
                 Name on M-Pesa Account
               </label>
               <input
@@ -161,7 +161,7 @@ export default function SettingsPage() {
                 onChange={(e) => setMpesaName(e.target.value)}
                 required
                 placeholder="John Doe"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-input-border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-input-bg text-input-text placeholder-input-placeholder"
               />
             </div>
 
@@ -175,11 +175,11 @@ export default function SettingsPage() {
           </form>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="bg-card rounded-lg shadow p-6">
+          <h2 className="text-lg font-medium text-card-foreground mb-2">
             How it works
           </h2>
-          <ul className="text-sm text-gray-600 space-y-2">
+          <ul className="text-sm text-muted-foreground space-y-2">
             <li>• A {PLATFORM_FEE_PERCENT}% service fee is added on top of every sale (client pays it)</li>
             <li>• A {PHOTOGRAPHER_FEE_PERCENT}% fee is deducted from your payout (covers Paystack fees)</li>
             <li>• Client pays: your price + {PLATFORM_FEE_PERCENT}% (e.g. KSh 1000 → client pays KSh {(1000 + Math.round(1000 * PLATFORM_FEE_PERCENT / 100)).toLocaleString()})</li>
